@@ -1,0 +1,15 @@
+body
+{
+    color:#FFFFFF;
+    background-color: #333333;
+    margin: 0;
+    overflow: hidden;
+}
+
+
+#container
+{
+    position: absolute;
+}
+
+
