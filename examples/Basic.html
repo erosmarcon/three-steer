@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Steering Behaviours</title>
+    <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+    <script src="../libs/stats.min.js"></script>
+    <script src="../libs/three.min.js"></script>
+    <script src="../js/threejs/controls/TrackballControls.js"></script>
+    <script src="../js/Entity.js"></script>
+</head>
+<script>
+    var container;
+    var camera;
+
+    var scene, renderer;
+    var controls;
+    var stats;
+
+    var entity1, entity2
+    var target
+
+
+    function onClick(event) { //temp
+        console.log("Click")
+        if (event.altKey) {      //event.preventDefault(); //???
+
+            var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse3D, camera);
+            var intersects = raycaster.intersectObjects(scene.children);
+            if (intersects.length > 0) {
+                target = new THREE.Vector3(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
+            }
+        }
+    }
+
+
+   function init(element)
+   {
+       container= document.getElementById(element);
+       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 20000);
+       scene = new THREE.Scene();
+
+       renderer = new THREE.WebGLRenderer({ alpha: true });
+       renderer.setClearColor( 0x333333, 0);
+       renderer.setSize(window.innerWidth, window.innerHeight);
+       renderer.domElement.style.position = 'absolute';
+       renderer.domElement.style.top = 0;
+       container.appendChild(renderer.domElement);
+
+       camera.position.set(0, 3000, 3000);
+       camera.lookAt(new THREE.Vector3(0,0,0))
+
+       controls = new THREE.TrackballControls(camera, renderer.domElement);
+       controls.maxPolarAngle = Math.PI * 0.5;
+       controls.minDistance = 100;
+       controls.maxDistance = 25000;
+
+       stats = new Stats();
+       stats.domElement.style.position = 'absolute';
+       stats.domElement.style.bottom = '0px';
+       stats.domElement.style.zIndex = 100;
+       container.appendChild( stats.domElement );
+
+       var floorGeo=new THREE.PlaneGeometry(10000,10000, 32 );
+       var floorMat=new THREE.MeshPhongMaterial({color: 0x008C00});
+       var floor=new THREE.Mesh( floorGeo, floorMat );
+       floor.rotation.x=-Math.PI*.5;
+       scene.add(floor);
+
+
+       var geometry = new THREE.BoxGeometry( 200, 200, 200 );
+       var material = new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true } );
+       var mesh = new THREE.Mesh(geometry, material);
+
+       entity1=new SteeringEntity(mesh)
+       //entity.velocity=new THREE.Vector3(0,2,0);
+       scene.add(entity1)
+       target=new THREE.Vector3(0, 0, 0);
+
+/*
+       entity2=new MovingEntity(0x00ff00)
+       entity2.position.set(500,0,500);
+       scene.add(entity2)
+*/
+
+       window.addEventListener('resize', onWindowResize, false);
+
+       document.addEventListener( 'mousedown', onClick, true );
+
+       animate();
+   }
+
+
+    function onWindowResize()
+    {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate()
+    {
+        requestAnimationFrame(animate);
+        controls.update();
+        var direction=new THREE.Vector3(1,0,1)
+        entity1.seek(target);
+        entity1.update();
+
+
+         /*
+         entity2.evade(entity1);
+         entity2.update();
+         */
+        renderer.render(scene, camera);
+        stats.update();
+
+    }
+
+
+</script>
+<body>
+<body onload="init('container')">
+<div id="container"></div>
+</body>
+</body>
+</html>
