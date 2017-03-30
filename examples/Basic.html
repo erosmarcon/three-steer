@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Steering Behaviours</title>
     <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+    <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
     <script src="../libs/three.min.js"></script>
     <script src="../js/threejs/controls/OrbitControls.js"></script>
@@ -20,6 +21,8 @@
     var entity1, entity2
     var obstacles
     var target
+
+    var boundings;
 
 
     function onClick(event) { //temp
@@ -78,11 +81,15 @@
 
 
        entity1=new SteeringEntity(mesh);
+       entity1.helper=new EntityHelper(entity1)
        //entity.velocity=new THREE.Vector3(0,2,0);
 
 
        scene.add(entity1);
+       scene.add(entity1.helper);
        target=new THREE.Vector3(0, 0, 0);
+
+       boundings=new THREE.Box3(new THREE.Vector3(-5000,-5000, -5000), new THREE.Vector3(5000, 5000, 5000))
 
 
        obstacles=[];
@@ -90,9 +97,11 @@
         for(var i=0;i<10;i++)
         {
             var entity=new SteeringEntity(new THREE.Mesh(geometry, material2))
+            entity.helper=new EntityHelper(entity)
             entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
             obstacles.push(entity)
             scene.add(entity);
+            scene.add(entity.helper);
 
         }
 
@@ -116,16 +125,22 @@
     {
         requestAnimationFrame(animate);
         controls.update();
-        var direction=new THREE.Vector3(1,0,1)
+
 
         //entity1.avoid(obstacles);
         entity1.seek(target)
+        entity1.lookWhereGoing()
         entity1.update();
+        entity1.helper.update();
+        entity1.bounce(boundings)
 
         for(var i=0;i<obstacles.length;i++)
         {
             obstacles[i].wander()
+            //obstacles[i].lookWhereGoing()
             obstacles[i].update()
+            obstacles[i].helper.update()
+            obstacles[i].bounce(boundings)
 
         }
 

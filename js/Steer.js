@@ -5,11 +5,17 @@ EntityHelper = function (entity) {
 
     this.entity=entity;
 
-    this.forward = new THREE.ArrowHelper(this.entity.forward, this.entity.position, 200, 0xFF0000)
-    this.backward = new THREE.ArrowHelper(this.entity.backward, this.entity.position, 200, 0x0000FF)
-    this.left = new THREE.ArrowHelper(this.entity.left, this.entity.position, 200, 0x0000FF)
-    this.right = new THREE.ArrowHelper(this.entity.right, this.entity.position, 200, 0x0000FF)
+    this.forward = new THREE.ArrowHelper(this.entity.forward, this.entity.position, 400, 0xFF0000)
+    this.backward = new THREE.ArrowHelper(this.entity.backward, this.entity.position, 300, 0x0000FF)
+    this.left = new THREE.ArrowHelper(this.entity.left, this.entity.position, 300, 0x0000FF)
+    this.right = new THREE.ArrowHelper(this.entity.right, this.entity.position, 300, 0x0000FF)
     this.velocity = new THREE.ArrowHelper(this.entity.velocity.clone().normalize(), this.entity.position, 10, 0x00FF00)
+
+
+    var geometry=new THREE.SphereGeometry(6)
+    var material =new THREE.MeshBasicMaterial({ color: 0xFFFFFF})
+    this.center=new THREE.Mesh(geometry, material)
+    this.add(this.center)
 
     this.add(this.forward)
     this.add(this.backward)
@@ -24,8 +30,11 @@ EntityHelper.prototype = Object.assign(Object.create(THREE.Group.prototype), {
     constructor: EntityHelper,
 
     update: function () {
+
+        this.position.set(this.entity.position.x, this.entity.position.y, this.entity.position.z);
         this.velocity.setDirection(this.entity.velocity.clone().normalize())
-        this.velocity.setLength(this.entity.velocity.length()*50)
+        if(this.entity.velocity && this.entity.velocity.length())
+            this.velocity.setLength(this.entity.velocity.length()*50)
     }
 });
 
@@ -34,17 +43,14 @@ Entity = function (mesh) {
 
     THREE.Group.apply(this);
 
+    this.mesh=mesh;
+
     this.mass = 1
     this.maxSpeed = 10
 
     this.position = new THREE.Vector3(0, 0, 0)//!!!!!
     this.velocity = new THREE.Vector3(0, 0, 0)
     this.box = new THREE.Box3().setFromObject(mesh);
-
-
-
-    //helpers
-
 
     Object.defineProperty(Entity.prototype, 'width', {
         enumerable: true,
@@ -109,9 +115,7 @@ Entity = function (mesh) {
 
     });
 
-    this.add(mesh)
-    this.helper=new EntityHelper(this)
-    this.add(this.helper);
+    this.add(this.mesh)
 
 }
 
@@ -121,11 +125,54 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
     update: function () {
         this.velocity.clampLength(0, this.maxSpeed)
         this.position.add(this.velocity)
-        this.helper.update()
+
+    },
+
+    bounce:function(box) //TODO Computed Bounding Box
+    {
+        if(this.position.x> box.max.x)
+        {
+            this.position.setX(box.max.x);
+            this.velocity.setX(this.velocity.x*-1);
+        }
+
+        else if(this.position.x< box.min.x)
+        {
+            this.position.setX(box.min.x);
+            this.velocity.setX(this.velocity.x*-1);
+        }
+
+        else if(this.position.z> box.max.z)
+        {
+            this.position.setZ(box.max.z);
+            this.velocity.setZ(this.velocity.z*-1);
+        }
+        else if(this.position.z< box.min.z)
+        {
+            this.position.setZ(box.min.z);
+            this.velocity.setZ(this.velocity.z*-1);
+        }
+
+        else if(this.position.y> box.max.y)
+        {
+            this.position.setY(box.max.y);
+            this.velocity.setY(this.velocity.y*-1);
+        }
+
+        else if(this.position.y< box.min.y)
+        {
+            this.position.setY(-box.min.y);
+            this.velocity.setY(this.velocity.y*-1);
+        }
+    },
+
+    lookWhereGoing:function() {
+        this.lookAt(this.position.clone().add(this.velocity));
     }
 });
 
 SteeringEntity = function (mesh) {
+
     Entity.call(this, mesh);
 
     this.maxForce = 1;
@@ -182,6 +229,11 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
     wander: function () //TODO: specify axis
     {
         var center = this.velocity.clone().normalize().setLength(this.wanderDistance);
+        if(this.helper)
+        {
+            this.helper.center.position.set(center.x, center.y, center.z)
+        }
+
         var offset = new THREE.Vector3(1, 1, 1);
         offset.setLength(this.wanderRadius);
 
@@ -195,9 +247,14 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         this.steeringForce.add(center);
     },
 
-    avoid: function (entities) {
-        for (var i = 0; i < entities.length; i++) {
+    interpose:function()
+    {
 
+    },
+
+    avoid: function (entities) {
+        for (var i = 0; i < entities.length; i++)
+        {
             //vector between obstacle and this
             var heading = this.velocity.clone().normalize();
             var difference = entities[i].position.clone().sub(this.position)
@@ -210,10 +267,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
                 if (distance < 250 + this.avoidBuffer && projection.length() < feeler.length())//radius
                 {
                     //calculate a force +/- 90 degrees from vector to obstacle
-                    var force = heading.clone().setLength(this.maxSpeed)
-                    force.x = Math.cos(this.wanderAngle) * offset.length()
-                    force.z = Math.sin(this.wanderAngle) * offset.length()
-                    force.y = Math.sin(this.wanderAngle) * offset.length()
+
                 }
             }
         }
@@ -233,7 +287,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 /**
  * Returns a random number between min (inclusive) and max (exclusive)
  */
-function getRandomArbitrary(min, max) {
+Math.getRandomArbitrary=function(min, max) {
     return Math.random() * (max - min) + min;
 }
 
@@ -241,7 +295,7 @@ function getRandomArbitrary(min, max) {
  * Returns a random integer between min (inclusive) and max (inclusive)
  * Using Math.round() will give you a non-uniform distribution!
  */
-function getRandomInt(min, max) {
+Math.getRandomInt=function(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
