@@ -39,7 +39,7 @@
    function init(element)
    {
        container= document.getElementById(element);
-       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 30000);
+       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
        scene = new THREE.Scene();
 
        renderer = new THREE.WebGLRenderer({ alpha: true });
@@ -55,7 +55,7 @@
        controls = new THREE.OrbitControls(camera, renderer.domElement);
        //controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
-       controls.maxDistance = 100000;
+       controls.maxDistance = 30000;
 
        stats = new Stats();
        stats.domElement.style.position = 'absolute';
@@ -126,9 +126,12 @@
             entity.lookWhereGoing();
         else
             entity.rotation.set(0,0,0)
+        entity.bounce(boundaries)
         entity.update();
         entity.helper.update();
-        entity.bounce(boundaries)
+
+        console.log(entity.velocity.length())
+
         renderer.render(scene, camera);
         stats.update();
     }
@@ -136,7 +139,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">ARRIVE: </span>ALT + Click on the floor to place the ball. The entity will arrive to it. Change threshold for more or less deceleration at the end</div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">ARRIVE: </span>ALT + Click on the floor to place the ball. Entity will arrive to it. Change threshold for more or less deceleration at the end</div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Arrive.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 </html>

@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Steering Behaviours: SEEK</title>
-    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
     <script src="../libs/three.min.js"></script>
     <script src="../js/threejs/controls/OrbitControls.js"></script>
     <script src="../js/Steer.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/main.css"/>
     <link rel="stylesheet" type="text/css" href="css/gui.css"/>
 </head>
 <script>
@@ -21,6 +22,8 @@
     var entity;
     var ball;
     var boundaries;
+    var entities
+    var params
 
     function onClick(event) {
         if (event.altKey) {
@@ -38,7 +41,7 @@
    function init(element)
    {
        container= document.getElementById(element);
-       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 30000);
+       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
        scene = new THREE.Scene();
 
        renderer = new THREE.WebGLRenderer({ alpha: true });
@@ -48,13 +51,13 @@
        renderer.domElement.style.top = 0;
        container.appendChild(renderer.domElement);
 
-       camera.position.set(0, 5000, 5000);
+       camera.position.set(0, 10000, 10000);
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
        //controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
-       controls.maxDistance = 50000;
+       controls.maxDistance = 30000;
 
        stats = new Stats();
        stats.domElement.style.position = 'absolute';
@@ -75,29 +78,66 @@
        var ballGeometry=new THREE.SphereGeometry(50, 32, 32);
        var ballMaterial=new THREE.MeshBasicMaterial({color: 0xBCFF00});
        ball=new THREE.Mesh( ballGeometry, ballMaterial );
+       ball.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(ball);
 
        // Entity Mesh
        var geometry = new THREE.BoxGeometry( 200, 500, 100 );
-       var material = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } );
+       var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh = new THREE.Mesh(geometry, material);
 
-       // Entity
-       entity=new SteeringEntity(mesh);
-       entity.helper=new EntityHelper(entity);
-       entity.lookAtDirection=false;
+       // Entities
+       entities=[]
+       for(var i=0;i<20;i++)
+       {
+           var entity=new SteeringEntity(new THREE.Mesh(geometry, material))
+           entity.helper=new EntityHelper(entity)
+           entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+           entities.push(entity)
+           scene.add(entity);
+           scene.add(entity.helper);
+       }
 
-       scene.add(entity);
-       scene.add(entity.helper);
 
-       //Plane boundings (do not cross)
-       boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 5000, 5000));
+
+
+       //Plane boundaries (do not cross)
+       boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 0, 5000));
 
        //Gui
+
+       params={maxSpeed:20, maxForce:5, lookAtDirection:false, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20, radius:200,  avoidDistance:400}
+
        var gui = new dat.GUI();
-       gui.add(entity, 'maxSpeed', 1, 50);
-       gui.add(entity, 'maxForce', 1, 20);
-       gui.add(entity, 'lookAtDirection');
+
+       var quantity = gui.add(params, 'numEntities', 2, 100).name("Num Of Entities");
+       quantity.onFinishChange(function(value) {
+           for(var i=0;i<entities.length;i++)
+           {
+               scene.remove(entities[i])
+               entities[i].mesh.geometry.dispose()
+               entities[i].mesh.material.dispose()
+               scene.remove(entities[i].helper)
+           }
+
+           for(var i=0;i<value;i++)
+           {
+               var entity=new SteeringEntity(new THREE.Mesh(geometry, material))
+               entity.helper=new EntityHelper(entity)
+               entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+               entities.push(entity)
+               scene.add(entity);
+               scene.add(entity.helper);
+           }
+       });
+       gui.add(params, 'maxSpeed', 1, 50).name('Max Speed');
+       gui.add(params, 'maxForce', 1, 20).name('Max Force');
+       gui.add(params, 'lookAtDirection').name('Look At Direction');
+       gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance');
+       gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius');
+       gui.add(params, 'wanderRange', 1, 20).name('Wander Range');
+       gui.add(params, 'avoidDistance', 200, 2000).name('Avoid Distance');
+       gui.add(params, 'radius', 100, 500).name('Collision Radius');
 
        window.addEventListener('resize', onWindowResize, false);
        document.addEventListener( 'mousedown', onClick, true );
@@ -115,23 +155,39 @@
     function animate()
     {
         requestAnimationFrame(animate);
+
+        for(var i=0;i<entities.length;i++)
+        {
+            entities[i].maxSpeed=params.maxSpeed;
+            entities[i].maxForce=params.maxForce;
+            entities[i].wanderDistance=params.wanderDistance;
+            entities[i].wanderRadius=params.wanderRadius;
+            entities[i].wanderRange=params.wanderRange;
+            entities[i].avoidDistance=params.avoidDistance;
+            entities[i].radius=params.radius;
+            entities[i].wander()
+            entities[i].avoid(entities)
+            if(params.lookAtDirection)
+                entities[i].lookWhereGoing();
+            else
+                entities[i].rotation.set(0,0,0)
+
+            entities[i].bounce(boundaries)
+            entities[i].update()
+            entities[i].helper.update();
+        }
         controls.update();
-        entity.flee(ball.position);
-        if(entity.lookAtDirection)
-            entity.lookWhereGoing();
-        else
-            entity.rotation.set(0,0,0)
-        entity.update();
-        entity.helper.update();
-        entity.bounce(boundaries)
         renderer.render(scene, camera);
         stats.update();
+
+
     }
 </script>
-<body>
+
 <body onload="init('container')">
-<div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> ALT + Click on the floor to place the ball. The entity will seek it.</div>
+    <div id="container"></div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">COLLISION AVOIDANCE:</span> Entities wandering around avoiding collision. Try to play with parameters </div>
+    <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/CollisionAvoidance.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
-</body>
+
 </html>

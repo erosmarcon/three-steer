@@ -146,41 +146,75 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
 
     bounce:function(box)
     {
-        if(this.position.x>= box.max.x)
+        if(this.position.x> box.max.x)
         {
             this.position.setX(box.max.x);
             this.velocity.setX(this.velocity.x*-1);
         }
 
-         else if(this.position.x<= box.min.x)
+         else if(this.position.x< box.min.x)
         {
             this.position.setX(box.min.x);
             this.velocity.setX(this.velocity.x*-1);
         }
 
-         if(this.position.z>= box.max.z)
+         if(this.position.z> box.max.z)
         {
             this.position.setZ(box.max.z);
             this.velocity.setZ(this.velocity.z*-1);
         }
-         else if(this.position.z<= box.min.z)
+         else if(this.position.z< box.min.z)
         {
             this.position.setZ(box.min.z);
             this.velocity.setZ(this.velocity.z*-1);
         }
 
-         if(this.position.y>= box.max.y)
+         if(this.position.y> box.max.y)
         {
             this.position.setY(box.max.y);
             this.velocity.setY(this.velocity.y*-1);
         }
 
-         else if(this.position.y<=box.min.y)
+         else if(this.position.y<box.min.y)
         {
             this.position.setY(-box.min.y);
             this.velocity.setY(this.velocity.y*-1);
         }
     },
+
+    wrap:function(box)
+    {
+        if(this.position.x> box.max.x)
+        {
+            this.position.setX(box.min.x+1);
+        }
+
+        else if(this.position.x< box.min.x)
+        {
+            this.position.setX(box.max.x-1);
+        }
+
+        if(this.position.z> box.max.z)
+        {
+            this.position.setZ(box.min.z+1);
+
+        }
+        else if(this.position.z< box.min.z)
+        {
+            this.position.setZ(box.max.z-1);
+        }
+
+        if(this.position.y> box.max.y)
+        {
+            this.position.setY(box.min.y+1);
+        }
+
+        else if(this.position.y<box.min.y)
+        {
+            this.position.setY(box.max.y+1);
+        }
+    },
+
 
     lookWhereGoing:function() {
         this.lookAt(this.position.clone().add(this.velocity).setY(this.position.y));
@@ -200,7 +234,7 @@ SteeringEntity = function (mesh) {
     this.wanderRange = 1;
 
     this.avoidDistance = 400
-    this.avoidBuffer=20;
+    this.avoidBuffer=20; //NOT USED
     this.steeringForce = new THREE.Vector3(0, 0, 0);
 }
 
@@ -263,9 +297,14 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         this.steeringForce.add(center);
     },
 
-    interpose:function()
+    interpose:function(targetA, targetB)
     {
-
+            var midPoint=targetA.position.clone().add(targetB.position.clone()).divideScalar(2);
+            var timeToMidPoint = this.position.distanceTo(midPoint) / this.maxSpeed;
+            var pointA=targetA.position.clone().add(targetA.velocity.clone().multiplyScalar(timeToMidPoint))
+            var pointB=targetB.position.clone().add(targetB.velocity.clone().multiplyScalar(timeToMidPoint))
+            midPoint = pointA.add( pointB ).divideScalar(2);
+            this.seek(midPoint)
     },
 
 
