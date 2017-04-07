@@ -103,10 +103,11 @@
        //Plane boundaries (do not cross)
        boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 0, 5000));
 
-       params={avoidCollisions:true}
+       params={avoidCollisions:true, helper:false}
 
        //Gui
        var gui = new dat.GUI();
+       gui.add(params, 'helper').name('Show Helper');
        gui.add(params, 'avoidCollisions').name('Avoid Collisions');
        var f1 = gui.addFolder('White Entity');
        f1.add(entity1, 'maxSpeed', 1, 50).name('Max Speed');
@@ -147,6 +148,7 @@
             entity1.rotation.set(0,0,0)
         entity1.bounce(boundaries)
         entity1.update();
+        entity1.helper.visible=params.helper;
         entity1.helper.update();
 
 
@@ -160,6 +162,7 @@
             entity2.rotation.set(0,0,0)
         entity2.bounce(boundaries)
         entity2.update();
+        entity2.helper.visible=params.helper;
         entity2.helper.update();
 
 

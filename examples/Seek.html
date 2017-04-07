@@ -22,6 +22,7 @@
     var entity;
     var ball;
     var boundaries;
+    var params
 
     function onClick(event) {
         if (event.altKey) {
@@ -97,11 +98,14 @@
        //Plane boundaries (do not cross)
        boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 0, 5000));
 
+       params={helper:false}
        //Gui
        var gui = new dat.GUI();
+       gui.add(params, 'helper').name('Show Helpers');
        gui.add(entity, 'maxSpeed', 1, 50).name('Max Speed');
        gui.add(entity, 'maxForce', 1, 20).name('Max Force');
        gui.add(entity, 'lookAtDirection').name('Look At Direction');
+
 
        window.addEventListener('resize', onWindowResize, false);
        document.addEventListener( 'mousedown', onClick, true );
@@ -127,6 +131,7 @@
         else
             entity.rotation.set(0,0,0)
         entity.update();
+        entity.helper.visible=params.helper
         entity.helper.update();
         renderer.render(scene, camera);
         stats.update();
