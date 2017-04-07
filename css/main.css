@@ -1,9 +1,52 @@
+@font-face
+{
+    font-family: 'opensans';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'opensans-bold';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 body
 {
     color:#FFFFFF;
     background-color: #333333;
     margin: 0;
     overflow: hidden;
+    padding:0;
+    height:100%;
+}
+
+a
+{
+    color:#FFFFFF;
+}
+
+.view-source
+{
+    font-family: 'opensans';
+    right: 20px;
+    bottom: 20px;
+    position: absolute;
+    font-size: 11px;
+    border: 1px solid gray;
+    background-color: rgba(51, 51, 51, 0.5);
+    padding: 10px;
+    cursor: pointer;
+    cursor: hand;
+}
+
+.view-source:hover
+{
+    background-color: rgba(0, 0, 0, 0.2);
+    color:#BCFF00;
 }
 
 #container
@@ -13,10 +56,11 @@ body
 
 #msg
 {
-    font-family: Arial, Helvetica, sans-serif;
-    padding-top:20px;
-    padding-left:100px;
+    font-family: 'opensans';
+    left:200px;
+    bottom: 20px;
     position: absolute;
+    font-size:12px;
 
 }
 

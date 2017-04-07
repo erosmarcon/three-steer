@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>THREE Steering Behaviours Examples</title>
+    <link rel="stylesheet" type="text/css" href="../css/index.css"/>
+</head>
+<script>
+
+    function go(location)
+    {
+        document.getElementById('main-frame').src = location;
+    }
+</script>
+<body>
+    <iframe src="Seek.html" id="main-frame"></iframe>
+
+    <div id="menu-container">
+        <div id="menu">
+            <div class="menu-title">Three-Steer Examples</div>
+            <div class="menu-item" onclick="go('Seek.html')">Seek</div>
+            <div class="menu-item" onclick="go('Flee.html')">Flee</div>
+            <div class="menu-item" onclick="go('Arrive.html')">Arrive</div>
+            <div class="menu-item" onclick="go('Pursue.html')">Pursue</div>
+            <div class="menu-item" onclick="go('Evade.html')">Evade</div>
+            <div class="menu-item" onclick="go('Interpose.html')">Interpose</div>
+            <div class="menu-item" onclick="go('Wander.html')">Wander</div>
+            <div class="menu-item" onclick="go('CollisionAvoidance.html')">Collision Avoidance</div>
+        </div>
+    </div>
+</body>
+</html>

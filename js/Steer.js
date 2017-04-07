@@ -5,11 +5,12 @@ EntityHelper = function (entity) {
 
     this.entity=entity;
 
-    this.forward = new THREE.ArrowHelper(this.entity.forward, this.entity.position, 400, 0xFF0000)
+    this.forward = new THREE.ArrowHelper(this.entity.forward, this.entity.position, 300, 0xFF0000)
     this.backward = new THREE.ArrowHelper(this.entity.backward, this.entity.position, 300, 0x0000FF)
     this.left = new THREE.ArrowHelper(this.entity.left, this.entity.position, 300, 0x0000FF)
     this.right = new THREE.ArrowHelper(this.entity.right, this.entity.position, 300, 0x0000FF)
     this.velocity = new THREE.ArrowHelper(this.entity.velocity.clone().normalize(), this.entity.position, 10, 0x00FF00)
+    this.raycaster=new THREE.ArrowHelper(this.entity.forward, this.entity.position, 400, 0x000000)
 
 
     var geometry=new THREE.SphereGeometry(6)
@@ -22,7 +23,7 @@ EntityHelper = function (entity) {
     this.add(this.left)
     this.add(this.right)
     this.add(this.velocity)
-
+    this.add(this.raycaster)
 
 }
 
@@ -32,9 +33,19 @@ EntityHelper.prototype = Object.assign(Object.create(THREE.Group.prototype), {
     update: function () {
 
         this.position.set(this.entity.position.x, this.entity.position.y, this.entity.position.z);
-        this.velocity.setDirection(this.entity.velocity.clone().normalize())
+
+
         if(this.entity.velocity && this.entity.velocity.length())
-            this.velocity.setLength(this.entity.velocity.length()*50)
+        {
+            this.velocity.setDirection(this.entity.velocity.clone().normalize())
+            this.velocity.setLength(this.entity.velocity.length()*20)
+        }
+
+        if(this.entity.raycaster )
+        {
+            this.raycaster.setDirection(this.entity.raycaster.ray.direction)
+            this.raycaster.setLength(this.entity.avoidDistance)
+        }
     }
 });
 
@@ -44,13 +55,14 @@ Entity = function (mesh) {
     THREE.Group.apply(this);
 
     this.mesh=mesh;
+    this.mass = 1;
+    this.maxSpeed = 25;
 
-    this.mass = 1
-    this.maxSpeed = 10
+    this.position = new THREE.Vector3(0, 0, 0);
+    this.velocity = new THREE.Vector3(0, 0, 0);
 
-    this.position = new THREE.Vector3(0, 0, 0)//!!!!!
-    this.velocity = new THREE.Vector3(0, 0, 0)
     this.box = new THREE.Box3().setFromObject(mesh);
+    this.raycaster=new THREE.Raycaster();
 
     Object.defineProperty(Entity.prototype, 'width', {
         enumerable: true,
@@ -117,6 +129,8 @@ Entity = function (mesh) {
 
     this.add(this.mesh)
 
+    this.radius=200 //temp
+
 }
 
 Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
@@ -124,42 +138,44 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
 
     update: function () {
         this.velocity.clampLength(0, this.maxSpeed)
+        this.velocity.setY(0);
         this.position.add(this.velocity)
-
     },
 
-    bounce:function(box) //TODO Computed Bounding Box
+
+
+    bounce:function(box)
     {
-        if(this.position.x> box.max.x)
+        if(this.position.x>= box.max.x)
         {
             this.position.setX(box.max.x);
             this.velocity.setX(this.velocity.x*-1);
         }
 
-        else if(this.position.x< box.min.x)
+         else if(this.position.x<= box.min.x)
         {
             this.position.setX(box.min.x);
             this.velocity.setX(this.velocity.x*-1);
         }
 
-        else if(this.position.z> box.max.z)
+         if(this.position.z>= box.max.z)
         {
             this.position.setZ(box.max.z);
             this.velocity.setZ(this.velocity.z*-1);
         }
-        else if(this.position.z< box.min.z)
+         else if(this.position.z<= box.min.z)
         {
             this.position.setZ(box.min.z);
             this.velocity.setZ(this.velocity.z*-1);
         }
 
-        else if(this.position.y> box.max.y)
+         if(this.position.y>= box.max.y)
         {
             this.position.setY(box.max.y);
             this.velocity.setY(this.velocity.y*-1);
         }
 
-        else if(this.position.y< box.min.y)
+         else if(this.position.y<=box.min.y)
         {
             this.position.setY(-box.min.y);
             this.velocity.setY(this.velocity.y*-1);
@@ -167,7 +183,7 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
     },
 
     lookWhereGoing:function() {
-        this.lookAt(this.position.clone().add(this.velocity));
+        this.lookAt(this.position.clone().add(this.velocity).setY(this.position.y));
     }
 });
 
@@ -175,14 +191,16 @@ SteeringEntity = function (mesh) {
 
     Entity.call(this, mesh);
 
-    this.maxForce = 1;
-    this.arrivalThreshold = 100;
+    this.maxForce = 5;
+    this.arrivalThreshold = 400;
+
     this.wanderAngle = 0
     this.wanderDistance = 10;
     this.wanderRadius = 5;
     this.wanderRange = 1;
-    this.avoidDistance = 300
-    this.avoidBuffer = 20
+
+    this.avoidDistance = 400
+    this.avoidBuffer=20;
     this.steeringForce = new THREE.Vector3(0, 0, 0);
 }
 
@@ -190,14 +208,14 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
     constructor: SteeringEntity,
 
-    seek: function (target) {
-        var desiredVelocity = target.clone().sub(this.position);
+    seek: function (position) {
+        var desiredVelocity = position.clone().sub(this.position);
         desiredVelocity.normalize().setLength(this.maxSpeed).sub(this.velocity);
         this.steeringForce.add(desiredVelocity);
     },
 
-    flee: function (target) {
-        var desiredVelocity = target.clone().sub(this.position);
+    flee: function (position) {
+        var desiredVelocity = position.clone().sub(this.position);
         desiredVelocity.normalize().setLength(this.maxSpeed).sub(this.velocity);
         this.steeringForce.sub(desiredVelocity);
     },
@@ -207,7 +225,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         desiredVelocity.normalize()
         var distance = this.position.distanceTo(target)
         if (distance > this.arrivalThreshold)
-            desiredVelocity.setLength(this.maxSpeed)
+            desiredVelocity.setLength(this.maxSpeed);
         else
             desiredVelocity.setLength(this.maxSpeed * distance / this.arrivalThreshold)
         desiredVelocity.sub(this.velocity);
@@ -226,24 +244,22 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         this.flee(predictedTarget);
     },
 
-    wander: function () //TODO: specify axis
+
+    wander: function ()
     {
         var center = this.velocity.clone().normalize().setLength(this.wanderDistance);
-        if(this.helper)
-        {
-            this.helper.center.position.set(center.x, center.y, center.z)
-        }
+        /*if(this.helper)
+         this.helper.center.position.set(center.x, center.y, center.z)*/
 
         var offset = new THREE.Vector3(1, 1, 1);
         offset.setLength(this.wanderRadius);
-
-
         offset.x = Math.sin(this.wanderAngle) * offset.length()
         offset.z = Math.cos(this.wanderAngle) * offset.length()
         offset.y = Math.sin(this.wanderAngle) * offset.length()
 
         this.wanderAngle += Math.random() * this.wanderRange - this.wanderRange * .5;
         center.add(offset)
+        center.setY(0)
         this.steeringForce.add(center);
     },
 
@@ -252,33 +268,37 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
     },
 
-    avoid: function (entities) {
-        for (var i = 0; i < entities.length; i++)
-        {
-            //vector between obstacle and this
-            var heading = this.velocity.clone().normalize();
-            var difference = entities[i].position.clone().sub(this.position)
-            var dot = difference.dot(heading)
-            //if obstacle is in front of this
-            if (dot > 0) {
-                var feeler = heading.clone().setLength(this.avoidDistance)
-                var projection = heading.clone().setLength(dot);
-                var distance = projection.clone().sub(difference).length();
-                if (distance < 250 + this.avoidBuffer && projection.length() < feeler.length())//radius
-                {
-                    //calculate a force +/- 90 degrees from vector to obstacle
 
-                }
+    avoid:function(obstacles)
+    {
+        var dynamic_length =this.velocity.length()/this.maxSpeed;
+        var ahead=this.position.clone().add(this.velocity.clone().normalize().multiplyScalar(dynamic_length))
+        var ahead2=this.position.clone().add(this.velocity.clone().normalize().multiplyScalar(this.avoidDistance*.5));
+        //get most threatening
+        var mostThreatening=null;
+        for(var i=0;i<obstacles.length;i++) //use radius???
+        {
+            if(obstacles[i]===this)
+                continue;
+            var collision=obstacles[i].position.distanceTo(ahead) <=obstacles[i].radius || obstacles[i].position.distanceTo(ahead2)<=obstacles[i].radius
+            if (collision && (mostThreatening == null || this.position.distanceTo( obstacles[i].position) <  this.position.distanceTo( mostThreatening.position))){
+                mostThreatening = obstacles[i];
             }
         }
+        //end
+        var avoidance=new THREE.Vector3(0,0,0)
+        if(mostThreatening!=null)
+        {
+            avoidance=ahead.clone().sub(mostThreatening.position).normalize().multiplyScalar(100)
+        }
+        this.steeringForce.add(avoidance);
     },
 
-
     update: function () {
-        this.steeringForce.clampLength(0, this.maxForce)
+        this.steeringForce.clampLength(0, this.maxForce);
         this.steeringForce.divideScalar(this.mass);
-        this.velocity.add(this.steeringForce)
-        this.steeringForce.set(0, 0, 0)
+        this.velocity.add(this.steeringForce);
+        this.steeringForce.set(0, 0, 0);
         Entity.prototype.update.call(this);
     }
 });
@@ -299,11 +319,33 @@ Math.getRandomInt=function(min, max) {
     return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-THREE.Vector3.prototype.setAngle = function (value) {
-    this.x = Math.cos(value) * this.length()
-    this.z = Math.sin(value) * this.length()
-    this.y = Math.sin(value) * this.length()
+THREE.Vector3.prototype.perp=function()
+{
+    return new THREE.Vector3(-this.z, 0, this.x)
 }
+
+THREE.Vector3.prototype.sign=function(vector)
+{
+    return this.perp().dot(vector) <0 ? -1: 1
+}
+
+
+Object.defineProperty(THREE.Vector3.prototype, 'angle', {
+    enumerable: true,
+    configurable: true,
+    get: function () {
+        return Math.atan2(this.z, this.x)
+    },
+
+    set: function (value) {
+        this.x = Math.cos(value) * this.length()
+        this.z = Math.sin(value) * this.length()
+    }
+
+});
+
+
+
 
 
 

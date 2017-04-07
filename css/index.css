@@ -1,0 +1,86 @@
+@font-face
+{
+    font-family: 'opensans';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'opensans-bold';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+body
+{
+    color:#FFFFFF;
+    background-color: #333333;
+    margin: 0;
+    overflow: hidden;
+    padding:0;
+    height:100%;
+}
+
+
+#main-frame
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    border: 1px solid gray;
+}
+#menu-container
+{
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 180px;
+    border: 1px solid gray;
+    background-color: rgba(51,51, 51, 0.5);
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+
+}
+
+#menu
+{
+    top:50px;
+    font-family: 'opensans';
+}
+.menu-title
+{
+    font-family: 'opensans-bold';
+    padding-left:10px;
+    padding-right:10px;
+    padding-top:40px;
+    padding-bottom:10px;
+    color:#BCFF00;
+    font-size:12px;
+    border-bottom: 1px solid #BCFF00;
+    font-weight: bold;
+}
+
+.menu-item
+{
+    border-bottom: 1px solid gray;
+    padding:10px;
+    font-size:11px;
+    cursor:pointer;
+    cursor: hand;
+    color:#FFFFFF;
+}
+
+.menu-item:hover
+{
+    background-color: rgba(0, 0, 0, 0.2);
+    color:#BCFF00;
+}
+

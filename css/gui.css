@@ -1,0 +1,109 @@
+@font-face
+{
+    font-family: 'opensans';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+@font-face
+{
+    font-family: 'opensans-bold';
+    src: url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff2') format('woff2'), url('../assets/fonts/open-sans/open-sans-v13-latin-700.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
+
+.dg.main.taller-than-window .close-button {
+    border-top: 1px solid #CCCCCC;
+}
+
+.dg.main .close-button {
+    background-color: #666666;
+    border-top: 1px solid #CCCCCC;
+}
+
+.dg.main .close-button:hover {
+    background-color: #888888;
+}
+
+.dg {
+    color: #FFFFFF;
+    text-shadow: none !important;
+    font-size: 10px;
+    font-family: 'opensans';
+
+
+}
+
+.dg.main::-webkit-scrollbar {
+    background: #fafafa;
+}
+
+.dg.main::-webkit-scrollbar-thumb {
+    background: #bbb;
+}
+
+.dg li:not(.folder) {
+    background: #333333;
+    border-bottom: 1px solid #666666;
+}
+
+.dg li.folder {
+    background: #333333;
+    border-bottom: 1px dotted #333333;
+}
+
+.dg li.save-row .button {
+    text-shadow: none !important;
+}
+
+.dg li.title {
+    background: #666666 url(data:image/gif;base64,R0lGODlhBQAFAJEAAP////Pz8////////yH5BAEAAAIALAAAAAAFAAUAAAIIlI+hKgFxoCgAOw==) 6px 10px no-repeat;
+    color: #BCFF00;
+}
+
+.dg .cr.function:hover,.dg .cr.boolean:hover {
+    background: #666666;
+}
+
+.dg .c input[type=text] {
+    background: #666666;
+}
+
+.dg .c input[type=text]:hover {
+    background: #666666;
+}
+
+.dg .c input[type=text]:focus {
+    background: #888888;
+    color: #FFFFFF;
+}
+
+.dg .c .slider {
+    background: #666666;
+}
+
+.dg .c .slider:hover {
+    background: #666666;;
+}
+
+
+.dg .c .slider-fg {
+    background: #BCFF00;
+}
+
+.dg .c .slider:hover .slider-fg {
+    background: #BCFF00;
+}
+
+.dg .cr.number {
+    border-left: 3px solid #BCFF00;
+}
+
+.dg .cr.number input[type=text] {
+    color: #BCFF00;
+}
+
+
