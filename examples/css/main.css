@@ -54,6 +54,17 @@ a
     position: absolute;
 }
 
+#loading-msg
+{
+    font-family: 'opensans-bold';
+    position: absolute;
+    font-size:11px;
+    top:50%;
+    width: 100%;
+    text-align: center;
+    color:#BCFF00;
+}
+
 #msg
 {
     font-family: 'opensans';

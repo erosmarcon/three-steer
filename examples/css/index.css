@@ -71,7 +71,10 @@ body
 .menu-item
 {
     border-bottom: 1px solid gray;
-    padding:10px;
+    padding-top:10px;
+    padding-bottom:10px;
+    padding-right:10px;
+    padding-left:20px;
     font-size:11px;
     cursor:pointer;
     cursor: hand;
@@ -82,5 +85,15 @@ body
 {
     background-color: rgba(0, 0, 0, 0.2);
     color:#BCFF00;
+}
+
+.menu-item-separator
+{
+    background-color: rgba(0, 0, 0, 0.2);
+    font-family: 'opensans-bold';
+    border-bottom: 1px solid #999999;
+    padding:10px;
+    font-size:11px;
+    color:#999999;
 }
 

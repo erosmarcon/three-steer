@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Steering Behaviours: SEEK</title>
+
+    <script src="../../libs/dat.gui.min.js"></script>
+    <script src="../../libs/stats.min.js"></script>
+    <script src="../../libs/three.min.js"></script>
+    <script src="../../js/threejs/sea3d/SEA3D.js"></script>
+    <script src="../../js/threejs/sea3d/SEA3DLZMA.js"></script>
+    <script src="../../js/threejs/sea3d/SEA3DLoader.js"></script>
+    <script src="../../js/threejs/controls/OrbitControls.js"></script>
+    <script src="../../js/Steer.js"></script>
+    <link rel="stylesheet" type="text/css" href="../css/main.css"/>
+    <link rel="stylesheet" type="text/css" href="../css/gui.css"/>
+</head>
+<script>
+    var container;
+    var camera;
+
+    var scene, renderer;
+    var clock;
+    var controls;
+    var stats;
+    var entity1, entity2;
+    var ball;
+    var boundaries;
+    var params;
+
+    var characters=[
+        {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
+        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
+        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
+    ];
+
+    var animations=[
+        {index:0, name:"idle", url:"models/animations/idle.tjs.sea"},
+        {index:1, name:"walk", url:"models/animations/walk.tjs.sea"},
+        {index:2, name:"jog", url:"models/animations/jog.tjs.sea"},
+        {index:3, name:"run",  url:"models/animations/run.tjs.sea"}
+    ];
+
+    function onClick(event) {
+        if (event.altKey) {
+            var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse3D, camera);
+            var intersects = raycaster.intersectObjects(scene.children);
+            if (intersects.length > 0) {
+                ball.position.set(intersects[0].point.x, 15, intersects[0].point.z)
+                entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+                entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+                entity3.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+            }
+        }
+    }
+
+
+    function loadModels() {
+        loadModel(0)
+    }
+
+    function loadModel(index) {
+        var loader = new THREE.SEA3D();
+        loader.onProgress = function (e) {
+            document.getElementById("loading-msg").innerHTML = "Loading model " + parseInt(index + 1) + " of " + characters.length //+ " ( " + parseInt(e.progress * 100) + "% )";
+        };
+
+        loader.onError = function (e) {
+            index++;
+            loadModel(index);
+        };
+
+        loader.onComplete = function (e) {
+
+            characters[index].mesh=loader.meshes[0]
+            characters[index].mesh.rotateY(Math.PI)
+
+            if (index < characters.length - 1) {
+                index++;
+                loadModel(index);
+            }
+            else {
+              loadAnimations()
+            }
+        }
+        loader.load(characters[index].url);
+    }
+
+
+    function loadAnimation(index) {
+        var loader = new THREE.SEA3D();
+        loader.onProgress = function (e) {
+            document.getElementById("loading-msg").innerHTML = "Loading animation " + parseInt(index + 1) + " of " + animations.length //+ " ( " + parseInt(e.progress * 100) + "% )";
+        };
+
+        loader.onError = function (e) {
+            index++;
+            loadAnimation(index);
+        };
+
+        loader.onComplete = function (e) {
+
+            animations[index].data=loader.meshes[0].animations[0]
+
+            if (index < animations.length - 1) {
+                index++;
+                loadAnimation(index);
+            }
+            else {
+                var el = document.getElementById("loading-msg")
+                el.parentNode.removeChild(el);
+                init('container');
+            }
+        }
+        loader.load(animations[index].url);
+    }
+
+    function loadAnimations() {
+
+        loadAnimation(0)
+    }
+
+    function init(element) {
+        container = document.getElementById(element);
+        camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
+        scene = new THREE.Scene();
+
+        renderer = new THREE.WebGLRenderer({alpha: true});
+        renderer.setClearColor(0x333333, 0);
+        renderer.shadowMap.enabled=true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        renderer.gammaInput = true;
+        renderer.gammaOutput = true;
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.domElement.style.position = 'absolute';
+        renderer.domElement.style.top = 0;
+        container.appendChild(renderer.domElement);
+
+        camera.position.set(0, 10000, 10000);
+        camera.lookAt(new THREE.Vector3(0, 0, 0));
+
+        controls = new THREE.OrbitControls(camera, renderer.domElement);
+        //controls.maxPolarAngle = Math.PI * 0.5;
+        controls.minDistance = 100;
+        controls.maxDistance = 30000;
+
+        stats = new Stats();
+        stats.domElement.style.position = 'absolute';
+        stats.domElement.style.bottom = '0px';
+        stats.domElement.style.left = '180px'
+        stats.domElement.style.zIndex = 100;
+        container.appendChild(stats.domElement);
+
+        clock = new THREE.Clock();
+
+        //Lights
+        var spotLight = new THREE.SpotLight( 0xffffff, 5.0 );
+        spotLight.position.set( 0, 5000, 0 );
+        spotLight.castShadow = true;
+        spotLight.shadow.mapSize.width = 1024;
+        spotLight.shadow.mapSize.height = 1024;
+        spotLight.angle = 1;
+        spotLight.penumbra = 0.5;
+        spotLight.decay = 2;
+        spotLight.distance = 10000;
+
+        var ambient = new THREE.AmbientLight( 0xFFFFFF );
+        ambient.intensity=0.25
+
+        scene.add( spotLight );
+        scene.add( ambient );
+
+        // Floor
+        var floorGeometry = new THREE.CubeGeometry(10000, 10000, 1, 32);
+        var floorMaterial = new THREE.MeshPhongMaterial({color: 0x4DA6FF});
+        var floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.receiveShadow=true;
+        floor.rotation.x = -Math.PI * .5;
+        scene.add(floor);
+
+        //Ball
+        var ballGeometry = new THREE.SphereGeometry(30, 32, 32);
+        var ballMaterial = new THREE.MeshLambertMaterial({color: 0xFF6600});
+        ball = new THREE.Mesh(ballGeometry, ballMaterial);
+        ball.castShadow=true;
+        ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 15, Math.random() * (5000 - (-5000)) + (-5000));
+        scene.add(ball);
+
+
+        var mesh1=characters[0].mesh;
+        mesh1.castShadow=true;
+
+        var mesh2=characters[1].mesh;
+        mesh2.castShadow=true;
+
+        var mesh3=characters[2].mesh;
+        mesh3.castShadow=true;
+
+        //attach animations
+        for(var i=0;i<animations.length;i++)
+        {
+            mesh1.animations.push(animations[i].data);
+            mesh1.clips.push(animations[i].data);
+            mesh1.animationsData[i] = animations[i].data;
+
+            mesh2.animations.push(animations[i].data);
+            mesh2.clips.push(animations[i].data);
+            mesh2.animationsData[i] = animations[i].data;
+
+            mesh3.animations.push(animations[i].data);
+            mesh3.clips.push(animations[i].data);
+            mesh3.animationsData[i] = animations[i].data;
+        }
+
+        // Entities
+        mesh1.scale.set(2,2,2)
+        mesh2.scale.set(2,2,2)
+        mesh3.scale.set(2,2,2)
+
+        // #1
+        entity1=new SteeringEntity(mesh1);
+        entity1.maxSpeed=8
+        entity1.radius=100
+        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+        scene.add(entity1);
+
+
+        // #2
+        entity2=new SteeringEntity(mesh2);
+        entity2.maxSpeed=8
+        entity2.radius=100
+        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+        scene.add(entity2);
+
+
+        // #3
+        entity3=new SteeringEntity(mesh3);
+        entity3.maxSpeed=8
+        entity2.radius=100
+        entity3.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+        scene.add(entity3);
+
+
+
+        //Plane boundaries (do not cross)
+        boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
+
+        //Gui
+        var gui = new dat.GUI();
+
+
+        var f1 = gui.addFolder('White Entity');
+        f1.add(entity1, 'maxSpeed', 5, 30).name('Max Speed');
+        f1.add(entity1, 'maxForce', 1, 20).name('Max Force');
+        f1.open()
+
+        var f2 = gui.addFolder('Red Entity');
+        f2.add(entity2, 'maxSpeed', 5, 30).name('Max Speed');
+        f2.add(entity2, 'maxForce', 1, 20).name('Max Force');
+
+        f2.open()
+
+        var f3 = gui.addFolder('Black Entity');
+        f3.add(entity3, 'maxSpeed', 5, 30).name('Max Speed');
+        f3.add(entity3, 'maxForce', 1, 20).name('Max Force');
+        f3.open()
+
+        window.addEventListener('resize', onWindowResize, false);
+        document.addEventListener('mousedown', onClick, true);
+        animate();
+    }
+
+
+    function onWindowResize() {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate() {
+
+        requestAnimationFrame(animate);
+        var delta = clock.getDelta();
+        THREE.SEA3D.AnimationHandler.update(delta);
+        controls.update();
+
+        //entity 1
+        entity1.seek(ball.position);
+        entity1.avoid([entity2, entity3])
+        entity1.lookAt(new THREE.Vector3(ball.position.x, entity1.position.y, ball.position.z))
+        entity1.bounce(boundaries)
+        entity1.update();
+
+
+        //entity 2
+        entity2.seek(entity1.position)
+        entity2.avoid([entity1, entity3])
+        entity2.lookAt(entity1.position)
+        entity2.bounce(boundaries)
+        entity2.update();
+
+
+        //entity 3
+        entity3.pursue(entity1)
+        entity3.avoid([entity2, entity1])
+        entity3.lookAt(entity1.position)
+        entity3.bounce(boundaries)
+        entity3.update();
+
+
+
+
+        if(entity1.velocity.length()<=1)
+            entity1.mesh.play(1, 0.2) ;//Idle
+
+        else if(entity1.velocity.length()>=1 && entity1.velocity.length()<=10)
+            entity1.mesh.play(2, 0.2) //Walk
+
+        else if(entity1.velocity.length()>10 && entity1.velocity.length()<=20)
+            entity1.mesh.play(3, 0.2) //Jog
+
+        else if(entity1.velocity.length()>20)
+            entity1.mesh.play(4, 0.2)//Run
+
+
+        if(entity2.velocity.length()<=1)
+                entity2.mesh.play(1, 0.2) //Idle
+
+        else if(entity2.velocity.length()>=1 && entity2.velocity.length()<=10)
+                entity2.mesh.play(2, 0.2) //Walk
+
+        else if(entity2.velocity.length()>10 && entity2.velocity.length()<=20)
+                entity2.mesh.play(3, 0.2) //Jog
+
+        else if(entity2.velocity.length()>20)
+                entity2.mesh.play(4, 0.2)//Run
+
+
+
+        if(entity3.velocity.length()<=1)
+                entity3.mesh.play(1, 0.2) //Idle
+
+        else if(entity3.velocity.length()>=1 && entity3.velocity.length()<=10)
+                entity3.mesh.play(2, 0.2) //Walk
+
+        else if(entity3.velocity.length()>10 && entity3.velocity.length()<=20)
+                entity3.mesh.play(3, 0.2) //Jog
+
+        else if(entity3.velocity.length()>20)
+                entity3.mesh.play(4, 0.2)//Run
+
+
+        renderer.render(scene, camera);
+        stats.update();
+
+
+    }
+</script>
+
+<body onload="loadModels()">
+<div id="container"></div>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">PURSUE:</span> White seeks ball. Red seeks White. Black pursues (Seek with prediction) White. ALT + Click on the floor to reposition ball and entities</div>
+<a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Pursue.html" target="_blank"><div class="view-source">View source</div></a>
+
+<div id="loading-msg"></div>
+
+</body>
+
+</html>
