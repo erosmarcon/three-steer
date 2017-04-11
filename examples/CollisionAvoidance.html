@@ -31,9 +31,7 @@
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
-            if (intersects.length > 0) {
-                ball.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
-            }
+
         }
     }
 
@@ -74,12 +72,6 @@
        scene.add(floor);
 
 
-       //Ball
-       var ballGeometry=new THREE.SphereGeometry(50, 32, 32);
-       var ballMaterial=new THREE.MeshBasicMaterial({color: 0xBCFF00});
-       ball=new THREE.Mesh( ballGeometry, ballMaterial );
-       ball.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
-       scene.add(ball);
 
        // Entity Mesh
        var geometry = new THREE.BoxGeometry( 200, 500, 100 );
@@ -97,8 +89,6 @@
            scene.add(entity);
            scene.add(entity.helper);
        }
-
-
 
 
        //Plane boundaries (do not cross)
@@ -119,6 +109,8 @@
                entities[i].mesh.material.dispose()
                scene.remove(entities[i].helper)
            }
+
+           entities=[]
 
            for(var i=0;i<value;i++)
            {
