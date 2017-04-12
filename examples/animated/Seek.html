@@ -30,8 +30,7 @@
 
     var characters=[
         {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
-        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
+
     ];
 
     var animations=[
@@ -41,15 +40,15 @@
         {index:3, name:"run",  url:"models/animations/run.tjs.sea"}
     ];
 
-    function onClick(event) {
-        if (event.altKey) {
+    function onMouseMove(event) {
+
             var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
             if (intersects.length > 0) {
                 ball.position.set(intersects[0].point.x, 15, intersects[0].point.z)
-            }
+
         }
     }
 
@@ -181,7 +180,7 @@
 
         //Ball
         var ballGeometry = new THREE.SphereGeometry(30, 32, 32);
-        var ballMaterial = new THREE.MeshLambertMaterial({color: 0xFF6600});
+        var ballMaterial = new THREE.MeshLambertMaterial({color: 0x002DB2});
         ball = new THREE.Mesh(ballGeometry, ballMaterial);
         ball.castShadow=true;
         ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 15, Math.random() * (5000 - (-5000)) + (-5000));
@@ -217,7 +216,7 @@
         gui.add(entity, 'maxForce', 1, 20).name('Max Force').step(1);
 
         window.addEventListener('resize', onWindowResize, false);
-        document.addEventListener('mousedown', onClick, true);
+        document.addEventListener('mousemove', onMouseMove, true);
         animate();
     }
 
@@ -231,36 +230,52 @@
     function animate() {
 
         requestAnimationFrame(animate);
+
+
         var delta = clock.getDelta();
         THREE.SEA3D.AnimationHandler.update(delta);
         controls.update();
-        entity.arrive(ball.position);
-        entity.bounce(boundaries)
-        entity.lookWhereGoing();
+
+        if(entity.position.distanceTo(ball.position)>100)
+        {
+            entity.seek(ball.position);
+            entity.lookWhereGoing(true);
+        }
+
+        else
+        {
+            entity.idle()
+            entity.lookAt(new THREE.Vector3(ball.position.x, entity.position.y, ball.position.z));
+        }
+
         entity.update();
-
-        if(entity.velocity.length()<=1)
-            entity.mesh.play(1, 0.2) //Idle
-
-        else if(entity.velocity.length()>=1 && entity.velocity.length()<=10)
-            entity.mesh.play(2, 0.2) //Walk
-
-        else if(entity.velocity.length()>10 && entity.velocity.length()<=20)
-            entity.mesh.play(3, 0.2) //Jog
-
-        else if(entity.velocity.length()>20)
-            entity.mesh.play(4, 0.2)//Run
+        entity.setAnimation()
 
         renderer.render(scene, camera);
         stats.update();
 
+    }
 
+
+    Entity.prototype.setAnimation=function()
+    {
+        if(this.velocity.length()<=1)
+            this.mesh.play(1, 0.2) ;//Idle
+
+        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
+            this.mesh.play(2, 0.2) //Walk
+
+        else if(this.velocity.length()>10 && this.velocity.length()<=20)
+            this.mesh.play(3, 0.2) //Jog
+
+        else if(this.velocity.length()>20)
+            this.mesh.play(4, 0.2)//Run
     }
 </script>
 
 <body onload="loadModels()">
 <div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> ALT + Click on the floor to place the ball. Entity will seek it.</div>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> Move mouse pointer on the floor to change ball position.</div>
 
 <div id="loading-msg"></div>
 <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Seek.html" target="_blank">

@@ -29,9 +29,7 @@
     var params;
 
     var characters=[
-        {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
-        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
+        {index:0, name:"white", url:"models/avatar_white.tjs.sea"}
     ];
 
     var animations=[
@@ -181,12 +179,11 @@
 
         //Ball
         var ballGeometry = new THREE.SphereGeometry(30, 32, 32);
-        var ballMaterial = new THREE.MeshLambertMaterial({color: 0xFF6600});
+        var ballMaterial = new THREE.MeshLambertMaterial({color: 0x002DB2});
         ball = new THREE.Mesh(ballGeometry, ballMaterial);
         ball.castShadow=true;
         ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 15, Math.random() * (5000 - (-5000)) + (-5000));
         scene.add(ball);
-
 
 
         var mesh=characters[0].mesh;
@@ -238,34 +235,39 @@
         controls.update();
         entity.arrive(ball.position);
         entity.bounce(boundaries)
-        entity.lookWhereGoing();
+        entity.lookWhereGoing(true);
         entity.update();
-
-        if(entity.velocity.length()<=1)
-            entity.mesh.play(1, 0.2) //Idle
-
-        else if(entity.velocity.length()>=1 && entity.velocity.length()<=10)
-            entity.mesh.play(2, 0.2) //Walk
-
-        else if(entity.velocity.length()>10 && entity.velocity.length()<=20)
-            entity.mesh.play(3, 0.2) //Jog
-
-        else if(entity.velocity.length()>20)
-            entity.mesh.play(4, 0.2)//Run
-
+        entity.setAnimation();
         var s = entity.velocity.length() / entity.maxSpeed;
         entity.mesh.currentAnimationAction.timeScale=s;
 
         renderer.render(scene, camera);
         stats.update();
 
+    }
 
+    Entity.prototype.setAnimation=function()
+    {
+        if(this.velocity.length()<=1)
+            this.mesh.play(1, 0.2) ;//Idle
+
+        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
+            this.mesh.play(2, 0.2) //Walk
+
+        else if(this.velocity.length()>10 && this.velocity.length()<=20)
+            this.mesh.play(3, 0.2) //Jog
+
+        else if(this.velocity.length()>20)
+            this.mesh.play(4, 0.2)//Run
+
+        var s = this.velocity.length() / this.maxSpeed;
+        this.mesh.currentAnimationAction.timeScale=s;
     }
 </script>
 
 <body onload="loadModels()">
 <div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">ARRIVE: </span>ALT + Click on the floor to place the ball. Entity will arrive to it. Change threshold for more or less deceleration at the end</div>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">ARRIVE: </span>ALT + Click on the floor to place the ball. Change threshold for more or less deceleration</div>
 
 <div id="loading-msg"></div>
 <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Arrive.html" target="_blank">

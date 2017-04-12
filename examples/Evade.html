@@ -69,55 +69,50 @@
        floor.rotation.x=-Math.PI*.5;
        scene.add(floor);
 
-
-
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 500, 100 );
+       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
        var material1 = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh1 = new THREE.Mesh(geometry, material1);
+       mesh1.position.setY(200)
 
        var material2 = new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true } );
        var mesh2 = new THREE.Mesh(geometry, material2);
+       mesh2.position.setY(200)
 
        // Entities
        entity1=new SteeringEntity(mesh1);
        entity1.maxSpeed=25
-       entity1.helper=new EntityHelper(entity1);
-       entity1.lookAtDirection=false;
+       entity1.lookAtDirection=true;
        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
-       entity1.helper.position.set(entity1.position.x, entity1.position.y, entity1.position.z);
 
        entity2=new SteeringEntity(mesh2);
        entity2.maxSpeed=20
-
-       entity2.helper=new EntityHelper(entity2);
-       entity2.lookAtDirection=false;
+       entity2.lookAtDirection=true;
        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
-       entity2.helper.position.set(entity2.position.x, entity2.position.y, entity2.position.z);
+
        scene.add(entity1);
-       scene.add(entity1.helper);
 
        scene.add(entity2);
-       scene.add(entity2.helper);
+
 
        //Plane boundaries (do not cross)
        boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 0, 5000));
 
-       params={avoidCollisions:true, helper:false}
+       params={avoidCollisions:true}
 
        //Gui
        var gui = new dat.GUI();
-       gui.add(params, 'helper').name('Show Helper');
+
        gui.add(params, 'avoidCollisions').name('Avoid Collisions');
        var f1 = gui.addFolder('White Entity');
-       f1.add(entity1, 'maxSpeed', 1, 50).name('Max Speed');
-       f1.add(entity1, 'maxForce', 1, 20).name('Max Force');
+       f1.add(entity1, 'maxSpeed', 1, 50).name('Max Speed').step(1);
+       f1.add(entity1, 'maxForce', 1, 20).name('Max Force').step(1);
        f1.add(entity1, 'lookAtDirection').name('Look at Direction');
        f1.open()
 
        var f2 = gui.addFolder('Red Entity')
-       f2.add(entity2, 'maxSpeed', 1, 50).name('Max Speed');
-       f2.add(entity2, 'maxForce', 1, 20).name('Max Force');
+       f2.add(entity2, 'maxSpeed', 1, 50).name('Max Speed').step(1);
+       f2.add(entity2, 'maxForce', 1, 20).name('Max Force').step(1);
        f2.add(entity2, 'lookAtDirection').name('Look At Direction');
        f2.open()
 
@@ -143,28 +138,26 @@
         if(params.avoidCollisions)
             entity1.avoid([entity2])
         if(entity1.lookAtDirection)
-            entity1.lookWhereGoing();
+            entity1.lookWhereGoing(true);
         else
             entity1.rotation.set(0,0,0)
-        entity1.bounce(boundaries)
-        entity1.update();
-        entity1.helper.visible=params.helper;
-        entity1.helper.update();
 
+        entity1.update();
 
         //entity 2
         entity2.pursue(entity1)
         if(params.avoidCollisions)
             entity2.avoid([entity1])
         if(entity2.lookAtDirection)
-            entity2.lookWhereGoing();
+            entity2.lookWhereGoing(true);
         else
             entity2.rotation.set(0,0,0)
-        entity2.bounce(boundaries)
-        entity2.update();
-        entity2.helper.visible=params.helper;
-        entity2.helper.update();
 
+        entity2.update();
+
+
+        entity1.bounce(boundaries)
+        entity2.bounce(boundaries)
 
         renderer.render(scene, camera);
         stats.update();

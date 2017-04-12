@@ -31,9 +31,7 @@
     var mesh
 
     var characters=[
-        {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
-        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
+        {index:0, name:"white", url:"models/avatar_white.tjs.sea"}
     ];
 
     var animations=[
@@ -98,7 +96,7 @@
 
         loader.onComplete = function (e) {
 
-            animations[index].data=loader.meshes[0].animations[0]
+            animations[index].data=loader.meshes[0].animations[0];
 
             if (index < animations.length - 1) {
                 index++;
@@ -211,7 +209,7 @@
 
         //Gui
 
-        params={maxSpeed:8, maxForce:5, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
+        params={ maxSpeed:8, maxForce:5, lookAtDirection:false, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20, radius:200,  avoidDistance:400}
 
         var gui = new dat.GUI();
 
@@ -250,9 +248,11 @@
 
         gui.add(params, 'maxSpeed', 5, 30).name('Max Speed').step(1);
         gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
-        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance').step(1);;
-        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius').step(1);;
-        gui.add(params, 'wanderRange', 1, 20).name('Wander Range').step(1);;
+        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance');
+        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius');
+        gui.add(params, 'wanderRange', 1, 20).name('Wander Range');
+        gui.add(params, 'avoidDistance', 200, 2000).name('Avoid Distance');
+        gui.add(params, 'radius', 100, 500).name('Collision Radius');
 
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
@@ -272,8 +272,6 @@
         var delta = clock.getDelta();
         THREE.SEA3D.AnimationHandler.update(delta);
         controls.update();
-
-
 
 
         for(var i=0;i<entities.length;i++)
@@ -296,7 +294,10 @@
             entities[i].wanderDistance=params.wanderDistance;
             entities[i].wanderRadius=params.wanderRadius;
             entities[i].wanderRange=params.wanderRange;
+            entities[i].avoidDistance=params.avoidDistance;
+            entities[i].radius=params.radius;
             entities[i].wander()
+            entities[i].avoid(entities)
             entities[i].lookWhereGoing();
             entities[i].bounce(boundaries)
             entities[i].update()

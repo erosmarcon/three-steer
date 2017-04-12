@@ -30,8 +30,7 @@
 
     var characters=[
         {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
-        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
+        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"}
     ];
 
     var animations=[
@@ -260,55 +259,43 @@
         //entity 1
         entity1.evade(entity2);
         entity1.avoid([entity2])
-        entity1.lookWhereGoing()
-        entity1.bounce(boundaries)
+        entity1.lookWhereGoing(true)
         entity1.update();
 
 
         //entity 2
         entity2.pursue(entity1)
         entity2.avoid([entity1])
-        entity2.bounce(boundaries)
+        entity2.lookWhereGoing(true)
         entity2.update();
 
 
-        if(entity1.velocity.length()<=1)
-            entity1.mesh.play(1, 0.2) ;//Idle
 
-        else if(entity1.velocity.length()>=1 && entity1.velocity.length()<=10)
-            entity1.mesh.play(2, 0.2) //Walk
+        entity1.bounce(boundaries)
+        entity2.bounce(boundaries)
 
-        else if(entity1.velocity.length()>10 && entity1.velocity.length()<=20)
-            entity1.mesh.play(3, 0.2) //Jog
-
-        else if(entity1.velocity.length()>20)
-            entity1.mesh.play(4, 0.2)//Run
-
-
-        if(entity2.position.distanceTo(entity1.position)<entity1.avoidDistance+entity1.radius)
-        {
-            entity2.mesh.play(2, 0.8) //Walk
-        }
-
-        else
-        {
-            entity2.lookWhereGoing();
-            if(entity2.velocity.length()<=1)
-                entity2.mesh.play(1, 0.2) //Idle
-
-            else if(entity2.velocity.length()>=1 && entity2.velocity.length()<=10)
-                entity2.mesh.play(2, 0.2) //Walk
-
-            else if(entity2.velocity.length()>10 && entity2.velocity.length()<=20)
-                entity2.mesh.play(3, 0.2) //Jog
-
-            else if(entity2.velocity.length()>20)
-                entity2.mesh.play(4, 0.2)//Run
-        }
-
+        entity1.setAnimation()
+        entity2.setAnimation()
 
         renderer.render(scene, camera);
         stats.update();
+
+
+    }
+
+    Entity.prototype.setAnimation=function()
+    {
+        if(this.velocity.length()<=1)
+            this.mesh.play(1, 0.2) ;//Idle
+
+        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
+            this.mesh.play(2, 0.2) //Walk
+
+        else if(this.velocity.length()>10 && this.velocity.length()<=20)
+            this.mesh.play(3, 0.2) //Jog
+
+        else if(this.velocity.length()>20)
+            this.mesh.play(4, 0.2)//Run
 
 
     }

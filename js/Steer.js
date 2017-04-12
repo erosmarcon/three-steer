@@ -10,6 +10,7 @@ EntityHelper = function (entity) {
     this.left = new THREE.ArrowHelper(this.entity.left, this.entity.position, 300, 0x0000FF)
     this.right = new THREE.ArrowHelper(this.entity.right, this.entity.position, 300, 0x0000FF)
     this.velocity = new THREE.ArrowHelper(this.entity.velocity.clone().normalize(), this.entity.position, 10, 0x00FF00)
+    this.force = new THREE.ArrowHelper(this.entity.steeringForce.clone().normalize(), this.entity.position, 10, 0xFF0000)
     this.raycaster=new THREE.ArrowHelper(this.entity.forward, this.entity.position, 400, 0x000000)
 
 
@@ -18,12 +19,13 @@ EntityHelper = function (entity) {
     this.center=new THREE.Mesh(geometry, material)
     this.add(this.center)
 
-    this.add(this.forward)
-    this.add(this.backward)
-    this.add(this.left)
-    this.add(this.right)
+    //this.add(this.forward)
+    //this.add(this.backward)
+    //this.add(this.left)
+    //this.add(this.right)
+    this.add(this.force)
     this.add(this.velocity)
-    this.add(this.raycaster)
+    //this.add(this.raycaster)
 
 }
 
@@ -34,11 +36,16 @@ EntityHelper.prototype = Object.assign(Object.create(THREE.Group.prototype), {
 
         this.position.set(this.entity.position.x, this.entity.position.y, this.entity.position.z);
 
-
         if(this.entity.velocity && this.entity.velocity.length())
         {
             this.velocity.setDirection(this.entity.velocity.clone().normalize())
             this.velocity.setLength(this.entity.velocity.length()*20)
+        }
+
+        if(this.entity.steeringForce && this.entity.steeringForce.length())
+        {
+            this.force.setDirection(this.entity.steeringForce.clone().normalize())
+            this.force.setLength(this.entity.steeringForce.length()*20)
         }
 
         if(this.entity.raycaster )
@@ -63,6 +70,9 @@ Entity = function (mesh) {
 
     this.box = new THREE.Box3().setFromObject(mesh);
     this.raycaster=new THREE.Raycaster();
+
+    this.velocitySamples=[]
+    this.numSamplesForSmoothing=20
 
     Object.defineProperty(Entity.prototype, 'width', {
         enumerable: true,
@@ -146,39 +156,38 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
 
     bounce:function(box)
     {
+
         if(this.position.x> box.max.x)
         {
             this.position.setX(box.max.x);
-            this.velocity.setX(this.velocity.x*-1);
+            this.velocity.angle=this.velocity.angle+.1
         }
 
-         else if(this.position.x< box.min.x)
+        if(this.position.x< box.min.x)
         {
             this.position.setX(box.min.x);
-            this.velocity.setX(this.velocity.x*-1);
+            this.velocity.angle=this.velocity.angle+.1
         }
 
-         if(this.position.z> box.max.z)
+        if(this.position.z> box.max.z)
         {
             this.position.setZ(box.max.z);
-            this.velocity.setZ(this.velocity.z*-1);
+            this.velocity.angle=this.velocity.angle+.1
         }
-         else if(this.position.z< box.min.z)
+        if(this.position.z< box.min.z)
         {
             this.position.setZ(box.min.z);
-            this.velocity.setZ(this.velocity.z*-1);
+            this.velocity.angle=this.velocity.angle+.1
         }
 
-         if(this.position.y> box.max.y)
+        if(this.position.y> box.max.y)
         {
             this.position.setY(box.max.y);
-            this.velocity.setY(this.velocity.y*-1);
         }
 
-         else if(this.position.y<box.min.y)
+        if(this.position.y<box.min.y)
         {
             this.position.setY(-box.min.y);
-            this.velocity.setY(this.velocity.y*-1);
         }
     },
 
@@ -216,8 +225,22 @@ Entity.prototype = Object.assign(Object.create(THREE.Group.prototype), {
     },
 
 
-    lookWhereGoing:function() {
-        this.lookAt(this.position.clone().add(this.velocity).setY(this.position.y));
+    lookWhereGoing:function(smoothing) {
+        var direction = this.position.clone().add(this.velocity).setY(this.position.y)
+        if (smoothing) {
+            if (this.velocitySamples.length == this.numSamplesForSmoothing) {
+                this.velocitySamples.shift();
+            }
+
+            this.velocitySamples.push (this.velocity.clone().setY(this.position.y));
+            direction.set(0,0,0);
+            for (var v=0;v<this.velocitySamples.length;v++) {
+                direction.add(this.velocitySamples[v])
+            }
+            direction.divideScalar(this.velocitySamples.length)
+            direction=this.position.clone().add(direction).setY(this.position.y)
+        }
+        this.lookAt(direction)
     }
 });
 
@@ -276,6 +299,12 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         var lookAheadTime = this.position.distanceTo(target.position) / this.maxSpeed;
         var predictedTarget = target.position.clone().sub(target.velocity.clone().setLength(lookAheadTime));
         this.flee(predictedTarget);
+    },
+
+    idle:function()
+    {
+        this.velocity.setLength(0)
+        this.steeringForce.set(0,0,0);
     },
 
 
