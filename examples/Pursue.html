@@ -177,12 +177,9 @@
         requestAnimationFrame(animate);
         controls.update();
 
-
-
-            entity1.avoid([entity2, entity3])
-            entity2.avoid([entity1, entity3])
-            entity3.avoid([entity1, entity2])
-
+        entity1.avoid([entity2, entity3])
+        entity2.avoid([entity1, entity3])
+        entity3.avoid([entity1, entity2])
 
         //entity 1
         if(entity1.position.distanceTo(ball.position)>100)
@@ -221,7 +218,6 @@
                 entity2.rotation.set(0,0,0)
         }
 
-
         //entity 3
         if(entity3.position.distanceTo(entity1.position)>200)
         {
@@ -255,7 +251,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">PURSUE:</span> White seeks ball. Red seeks White. Black pursues (Seek with prediction) White. Move mouse on the floor to change ball position. ALT + Click to reposition entities<div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">PURSUE:</span> White seeks ball. Red seeks White. Black pursues (Seek with prediction) White. Move mouse on the floor to change ball position. ALT + Click to reposition entities</div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Pursue.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 
