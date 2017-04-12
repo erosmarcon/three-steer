@@ -217,9 +217,20 @@
         quantity.onFinishChange(function(value) {
             for(var i=0;i<entities.length;i++)
             {
+                entities[i].mesh.traverse(function(obj) {
+                    scene.remove(obj);
+                    if(obj.geometry)
+                        obj.geometry.dispose();
+                    if(obj.material)
+                        obj.material.dispose();
+                    if(obj.mesh)
+                        obj.mesh.dispose();
+                    if(obj.texture)
+                        obj.texture.dispose();
+
+                });
                 scene.remove(entities[i])
-                entities[i].mesh.geometry.dispose()
-                entities[i].mesh.material.dispose()
+
             }
             entities=[]
 
@@ -248,8 +259,8 @@
 
         gui.add(params, 'maxSpeed', 5, 30).name('Max Speed').step(1);
         gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
-        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance').step(1);;
-        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius').step(1);;
+        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance').step(1);
+        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius').step(1);
         gui.add(params, 'wanderRange', 1, 20).name('Wander Range').step(1);;
 
         window.addEventListener('resize', onWindowResize, false);
@@ -277,25 +288,15 @@
         for(var i=0;i<entities.length;i++)
         {
 
-           if(entities[i].velocity.length()<=1)
-                entities[i].mesh.play(1, 0.2) //Idle
 
-            else if(entities[i].velocity.length()>=1 && entities[i].velocity.length()<=10)
-                entities[i].mesh.play(2, 0.2) //Walk
-
-            else if(entities[i].velocity.length()>10 && entities[i].velocity.length()<=20)
-                entities[i].mesh.play(3, 0.2) //Jog
-
-            else if(entities[i].velocity.length()>20)
-                entities[i].mesh.play(4, 0.2)//Run
-
+            entities[i].setAnimation()
             entities[i].maxSpeed=params.maxSpeed;
             entities[i].maxForce=params.maxForce;
             entities[i].wanderDistance=params.wanderDistance;
             entities[i].wanderRadius=params.wanderRadius;
             entities[i].wanderRange=params.wanderRange;
             entities[i].wander()
-            entities[i].lookWhereGoing();
+            entities[i].lookWhereGoing(true);
             entities[i].bounce(boundaries)
             entities[i].update()
 
@@ -307,6 +308,24 @@
         stats.update();
 
 
+    }
+
+    Entity.prototype.setAnimation=function()
+    {
+        if(this.velocity.length()<=1)
+            this.mesh.play(1, 0.2) ;//Idle
+
+        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
+            this.mesh.play(2, 0.2) //Walk
+
+        else if(this.velocity.length()>10 && this.velocity.length()<=20)
+            this.mesh.play(3, 0.2) //Jog
+
+        else if(this.velocity.length()>20)
+            this.mesh.play(4, 0.2)//Run
+
+        var s = this.velocity.length() / this.maxSpeed;
+        this.mesh.currentAnimationAction.timeScale=s;
     }
 </script>
 

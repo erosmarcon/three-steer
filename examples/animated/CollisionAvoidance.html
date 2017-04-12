@@ -41,16 +41,6 @@
         {index:3, name:"run",  url:"models/animations/run.tjs.sea"}
     ];
 
-    function onClick(event) {
-        if (event.altKey) {
-            var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
-            var raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera(mouse3D, camera);
-            var intersects = raycaster.intersectObjects(scene.children);
-
-        }
-    }
-
 
     function loadModels() {
         loadModel(0)
@@ -179,8 +169,6 @@
 
 
 
-
-
         // Entities
         entities=[]
         for(var i=0;i<20;i++)
@@ -217,9 +205,20 @@
         quantity.onFinishChange(function(value) {
             for(var i=0;i<entities.length;i++)
             {
+                entities[i].mesh.traverse(function(obj) {
+                    scene.remove(obj);
+                    if(obj.geometry)
+                        obj.geometry.dispose();
+                    if(obj.material)
+                        obj.material.dispose();
+                    if(obj.mesh)
+                        obj.mesh.dispose();
+                    if(obj.texture)
+                        obj.texture.dispose();
+
+                });
                 scene.remove(entities[i])
-                entities[i].mesh.geometry.dispose()
-                entities[i].mesh.material.dispose()
+
             }
             entities=[]
 
@@ -248,14 +247,14 @@
 
         gui.add(params, 'maxSpeed', 5, 30).name('Max Speed').step(1);
         gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
-        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance');
-        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius');
-        gui.add(params, 'wanderRange', 1, 20).name('Wander Range');
-        gui.add(params, 'avoidDistance', 200, 2000).name('Avoid Distance');
-        gui.add(params, 'radius', 100, 500).name('Collision Radius');
+        gui.add(params, 'wanderDistance', 10, 100).name('Wander Distance').step(1);
+        gui.add(params, 'wanderRadius', 5, 1000).name('Wander Radius').step(1);
+        gui.add(params, 'wanderRange', 1, 20).name('Wander Range').step(1);
+        gui.add(params, 'avoidDistance', 200, 2000).name('Avoid Distance').step(1);
+        gui.add(params, 'radius', 100, 500).name('Collision Radius').step(1);
 
         window.addEventListener('resize', onWindowResize, false);
-        document.addEventListener('mousedown', onClick, true);
+
         animate();
     }
 
@@ -277,18 +276,8 @@
         for(var i=0;i<entities.length;i++)
         {
 
-           if(entities[i].velocity.length()<=1)
-                entities[i].mesh.play(1, 0.2) //Idle
 
-            else if(entities[i].velocity.length()>=1 && entities[i].velocity.length()<=10)
-                entities[i].mesh.play(2, 0.2) //Walk
-
-            else if(entities[i].velocity.length()>10 && entities[i].velocity.length()<=20)
-                entities[i].mesh.play(3, 0.2) //Jog
-
-            else if(entities[i].velocity.length()>20)
-                entities[i].mesh.play(4, 0.2)//Run
-
+            entities[i].setAnimation()
             entities[i].maxSpeed=params.maxSpeed;
             entities[i].maxForce=params.maxForce;
             entities[i].wanderDistance=params.wanderDistance;
@@ -305,11 +294,28 @@
         }
 
 
-
         renderer.render(scene, camera);
         stats.update();
 
 
+    }
+
+    Entity.prototype.setAnimation=function()
+    {
+        if(this.velocity.length()<=1)
+            this.mesh.play(1, 0.2) ;//Idle
+
+        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
+            this.mesh.play(2, 0.2) //Walk
+
+        else if(this.velocity.length()>10 && this.velocity.length()<=20)
+            this.mesh.play(3, 0.2) //Jog
+
+        else if(this.velocity.length()>20)
+            this.mesh.play(4, 0.2)//Run
+
+        var s = this.velocity.length() / this.maxSpeed;
+        this.mesh.currentAnimationAction.timeScale=s;
     }
 </script>
 

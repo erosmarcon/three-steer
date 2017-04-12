@@ -46,7 +46,7 @@
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
             if (intersects.length > 0) {
-                ball.position.set(intersects[0].point.x, 15, intersects[0].point.z)
+                ball.position.set(intersects[0].point.x, 30, intersects[0].point.z)
             }
         }
     }
@@ -182,7 +182,7 @@
         var ballMaterial = new THREE.MeshLambertMaterial({color: 0x002DB2});
         ball = new THREE.Mesh(ballGeometry, ballMaterial);
         ball.castShadow=true;
-        ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 15, Math.random() * (5000 - (-5000)) + (-5000));
+        ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 30, Math.random() * (5000 - (-5000)) + (-5000));
         scene.add(ball);
 
 
