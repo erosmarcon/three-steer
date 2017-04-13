@@ -1,5 +1,10 @@
 # ThreeSteer
 
+<p align="center">
+  <img src="https://github.com/erosmarcon/three-steer/blob/master/images/screenshots/ThreeSteer-shot-1.png"/>
+</p>
+
+
 ## What is
 A basic steering behaviors library based on THREE.js.
 The term 'Steering Behaviors' refers to a set of common AI movement algorithms and was coined by [Craig Reynolds](https://en.wikipedia.org/wiki/Craig_Reynolds_(computer_graphics)) in a [paper](http://www.red3d.com/cwr/papers/1999/gdc99steer.html) published in 1999.
