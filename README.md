@@ -44,8 +44,9 @@ Create a basic 3D scene:
 
 ## How to use
 
-Simply instantiate SteeringEntities passing a renderable Object3D and add to the scene.
-(SteeringEntity is only an empty container with the motion logic)
+Simply instantiate and add to the scene SteeringEntities.
+SteeringEntity is only an empty container with the motion logic, you need to pass a visible Object3D to the constructor to see it in action:
+
 
     var geometry = new THREE.BoxGeometry( 100, 200, 50 );
     var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
@@ -80,3 +81,8 @@ Supported Behaviors are:
 
 
 Currently the library only moves objects in the x/z direction.
+
+
+## Examples
+
+[Let's see action!](http://www.uxvision.it/projects/ThreeSteer/examples/index.html)
