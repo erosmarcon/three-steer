@@ -288,10 +288,10 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         this.steeringForce.sub(desiredVelocity);
     },
 
-    arrive: function (target) {
-        var desiredVelocity = target.clone().sub(this.position);
+    arrive: function (position) {
+        var desiredVelocity = position.clone().sub(this.position);
         desiredVelocity.normalize()
-        var distance = this.position.distanceTo(target)
+        var distance = this.position.distanceTo(position)
         if (distance > this.arrivalThreshold)
             desiredVelocity.setLength(this.maxSpeed);
         else
@@ -347,7 +347,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
             this.seek(midPoint)
     },
 
-    getHidingPosition:function(spot, target)
+  /*  getHidingPosition:function(spot, target)
     {
         var distanceAway=target.boundingRadius+this.distanceFromBoundary;
         var direction=spot.position.clone().sub(target.position)
@@ -377,6 +377,53 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
         this.arrive(bestHidingSpot)
 
+    },*/
+
+
+    separation:function(entities, separationRadius=300, maxSeparation=100)
+    {
+        var force=new THREE.Vector3(0,0,0);
+        var neighborCount=0
+
+        for(var i=0;i<entities.length;i++)
+        {
+            if(entities[i]!=this && entities[i].position.distanceTo(this.position)<=separationRadius)
+            {
+                force.add(entities[i].position.clone().sub(this.position));
+                neighborCount++;
+            }
+        }
+        if(neighborCount!=0)
+        {
+            force.divideScalar(neighborCount)
+            force.negate();
+        }
+        force.normalize();
+        force.multiplyScalar(maxSeparation);
+        this.steeringForce.add(force);
+    },
+
+    isOnLeaderSight:function(leader, ahead, leaderSightRadius)
+    {
+        return (ahead.distanceTo(this.position) <=leaderSightRadius || leader.position.distanceTo(this.position)<=leaderSightRadius)
+    },
+
+    followLeader:function(leader, entities, distance=400, separationRadius=300, maxSeparation=100, leaderSightRadius=1600)
+    {
+        var tv=leader.velocity.clone();
+        tv.normalize().multiplyScalar(distance)
+        var ahead=leader.position.clone().add(tv)
+        tv.negate()
+        var behind=leader.position.clone().add(tv)
+
+        if(this.isOnLeaderSight(leader, ahead, leaderSightRadius))
+        {
+            this.evade(leader);
+        }
+        this.arrivalThreshold=200;
+        this.arrive(behind);
+        this.separation(entities,separationRadius, maxSeparation);
+
     },
 
     inSight:function(entity)
@@ -384,7 +431,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         if(this.position.distanceTo(entity.position)>this.inSightDistance)
             return false;
         var heading=this.velocity.clone().normalize();
-        var difference=entity.position.clone().sub(this.position)
+        var difference=entity.position.clone().sub(this.position);
         var dot=difference.dot(heading)
         if(dot<0)
             return false;
@@ -395,9 +442,9 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
     flock:function(entities)
     {
-        var averageVelocity=this.velocity.clone()
-        var averagePosition=new THREE.Vector3(0,0,0)
-        var inSightCount=0
+        var averageVelocity=this.velocity.clone();
+        var averagePosition=new THREE.Vector3(0,0,0);
+        var inSightCount=0;
         for(var i=0;i<entities.length;i++)
         {
             if(entities[i]!=this && this.inSight(entities[i]))
@@ -414,9 +461,9 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
         if(inSightCount>0)
         {
-            averageVelocity.divideScalar(inSightCount)
-            averagePosition.divideScalar(inSightCount)
-            this.seek(averagePosition)
+            averageVelocity.divideScalar(inSightCount);
+            averagePosition.divideScalar(inSightCount);
+            this.seek(averagePosition);
             this.steeringForce.add(averageVelocity.sub(this.velocity))
         }
     },
@@ -446,7 +493,6 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
             this.seek(wayPoint)
 
     },
-
 
 
     avoid:function(obstacles)

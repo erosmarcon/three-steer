@@ -82,6 +82,7 @@ Supported Behaviors are:
 * Wander
 * Collision Avoidance
 * Follow Path
+* Follow Leader
 * Cohesion, separation and alignment (Flocking)
 
 
