@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: EVADE</title>
     <link rel="stylesheet" type="text/css" href="css/main.css"/>
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -51,7 +51,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
-       //controls.maxPolarAngle = Math.PI * 0.5;
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -70,23 +70,23 @@
        scene.add(floor);
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material1 = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh1 = new THREE.Mesh(geometry, material1);
-       mesh1.position.setY(200)
+       mesh1.position.setY(100)
 
        var material2 = new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true } );
        var mesh2 = new THREE.Mesh(geometry, material2);
-       mesh2.position.setY(200)
+       mesh2.position.setY(100)
 
        // Entities
        entity1=new SteeringEntity(mesh1);
-       entity1.maxSpeed=25
+       entity1.maxSpeed=15
        entity1.lookAtDirection=true;
        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
 
        entity2=new SteeringEntity(mesh2);
-       entity2.maxSpeed=20
+       entity2.maxSpeed=10
        entity2.lookAtDirection=true;
        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
 
@@ -166,7 +166,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">EVADE:</span> Red pursues White. White evade from RED. ALT + Click on the floor to change White position</div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">EVADE:</span><br>Red pursues White.<br>White evade from RED.<br>ALT + Click on the floor to change White position</div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Evade.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

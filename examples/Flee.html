@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: FLEE</title>
     <link rel="stylesheet" type="text/css" href="css/main.css"/>
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -29,7 +29,7 @@
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
             if (intersects.length > 0) {
-                entity1.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
+                entity1.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
             }
         }
     }
@@ -58,7 +58,7 @@
        stats = new Stats();
        stats.domElement.style.position = 'absolute';
        stats.domElement.style.bottom = '0px';
-       stats.domElement.style.left='180px'
+       stats.domElement.style.left='180px';
        stats.domElement.style.zIndex = 100;
        container.appendChild( stats.domElement );
 
@@ -75,21 +75,21 @@
        var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material1 = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh1 = new THREE.Mesh(geometry, material1);
-       mesh1.position.setY(100)
+       mesh1.position.setY(100);
 
        var material2 = new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true } );
        var mesh2 = new THREE.Mesh(geometry, material2);
-       mesh2.position.setY(200)
+       mesh2.position.setY(100);
 
        // Entities
        entity1=new SteeringEntity(mesh1);
-       entity1.maxSpeed=15
+       entity1.maxSpeed=15;
        entity1.lookAtDirection=true;
        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(entity1);
 
        entity2=new SteeringEntity(mesh2);
-       entity2.maxSpeed=10
+       entity2.maxSpeed=10;
        entity2.lookAtDirection=true;
        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(entity2);

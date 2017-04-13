@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: WANDER</title>
 
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -44,7 +44,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
-       //controls.maxPolarAngle = Math.PI * 0.5;
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -63,10 +63,10 @@
        scene.add(floor);
 
 
-       params={maxSpeed:20, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
+       params={maxSpeed:10, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
 
        // Entities
@@ -74,7 +74,7 @@
        for(var i=0;i<params.numEntities;i++)
        {
            var mesh=new THREE.Mesh(geometry, material)
-           mesh.position.setY(200)
+           mesh.position.setY(100)
            var entity=new SteeringEntity(mesh)
            entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
            entities.push(entity)
@@ -104,7 +104,7 @@
            for(var i=0;i<value;i++)
            {
                var mesh=new THREE.Mesh(geometry, material)
-               mesh.position.setY(200)
+               mesh.position.setY(100)
                var entity=new SteeringEntity(mesh)
                entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
                entities.push(entity)
@@ -163,7 +163,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">WANDER:</span> Entities wandering around. Try to play with parameters </div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">WANDER:</span><br>Entities wandering around.<br>Try to play with parameters </div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Wander.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

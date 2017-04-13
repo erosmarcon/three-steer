@@ -25,8 +25,6 @@
     var entities
     var params
 
-
-
    function init(element)
    {
        container= document.getElementById(element);
@@ -44,7 +42,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
-       //controls.maxPolarAngle = Math.PI * 0.5;
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -63,7 +61,7 @@
        scene.add(floor);
 
 
-       params={inSightDistance:1000, tooCloseDistance:400, maxSpeed:20, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
+       params={inSightDistance:1000, tooCloseDistance:400, maxSpeed:15, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
 
        // Entity Mesh
        var geometry = new THREE.BoxGeometry( 100, 200, 50 );
@@ -163,7 +161,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">FLOCKING:</span> Entities Flocking. Try to play with parameters </div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">FLOCKING:</span><br>Entities Flocking.<br>Try to play with parameters </div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Flocking.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

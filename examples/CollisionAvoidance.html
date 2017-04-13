@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: COLLISION AVOIDANCE</title>
 
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -45,7 +45,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
-       //controls.maxPolarAngle = Math.PI * 0.5;
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -63,10 +63,10 @@
        floor.rotation.x=-Math.PI*.5;
        scene.add(floor);
 
-       params={maxSpeed:20, maxForce:5, lookAtDirection:false, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20, radius:200,  avoidDistance:400}
+       params={maxSpeed:10, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20, radius:200,  avoidDistance:400}
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
 
 
@@ -75,7 +75,7 @@
        for(var i=0;i<params.numEntities;i++)
        {
            var mesh=new THREE.Mesh(geometry, material)
-           mesh.position.setY(200)
+           mesh.position.setY(100)
            var entity=new SteeringEntity(mesh)
            entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
            entities.push(entity)
@@ -96,20 +96,15 @@
                scene.remove(entities[i])
                entities[i].mesh.geometry.dispose()
                entities[i].mesh.material.dispose()
-               scene.remove(entities[i].helper)
            }
 
            entities=[]
 
-           var geometry = new THREE.BoxGeometry( 200, 400, 100 );
-           var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
-
-
            for(var i=0;i<value;i++)
            {
                var mesh=new THREE.Mesh(geometry, material)
-               mesh.position.setY(200)
-               var entity=new SteeringEntity(new THREE.Mesh(geometry, material))
+               mesh.position.setY(100);
+               var entity=new SteeringEntity(mesh)
                entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
                entities.push(entity)
                scene.add(entity);
@@ -172,7 +167,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">COLLISION AVOIDANCE:</span> Entities wandering around avoiding collision. Try to play with parameters </div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">COLLISION AVOIDANCE:</span><br>Entities wandering around avoiding collision.<br>Try to play with parameters </div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/CollisionAvoidance.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

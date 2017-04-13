@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: INTERPOSE</title>
     <link rel="stylesheet" type="text/css" href="css/main.css"/>
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -69,14 +69,14 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
-       //controls.maxPolarAngle = Math.PI * 0.5;
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
        stats = new Stats();
        stats.domElement.style.position = 'absolute';
        stats.domElement.style.bottom = '0px';
-       stats.domElement.style.left='180px'
+       stats.domElement.style.left='180px';
        stats.domElement.style.zIndex = 100;
        container.appendChild( stats.domElement );
 
@@ -97,37 +97,37 @@
 
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material1 = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh1 = new THREE.Mesh(geometry, material1);
-       mesh1.position.setY(200)
+       mesh1.position.setY(100)
 
        var material2 = new THREE.MeshBasicMaterial( { color: 0xFF0000, wireframe: true } );
        var mesh2 = new THREE.Mesh(geometry, material2);
-       mesh2.position.setY(200)
+       mesh2.position.setY(100)
 
        var material3 = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } );
        var mesh3 = new THREE.Mesh(geometry, material3);
-       mesh3.position.setY(200)
+       mesh3.position.setY(100)
        // Entities
 
        // #1
        entity1=new SteeringEntity(mesh1);
-       entity1.maxSpeed=20
+       entity1.maxSpeed=18
        entity1.lookAtDirection=true;
        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(entity1);
 
         // #2
-       entity2=new SteeringEntity(mesh2);
-       entity2.maxSpeed=20
+       entity2=new SteeringEntity(mesh2)
+       entity2.maxSpeed=10
        entity2.lookAtDirection=true;
        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(entity2);
 
        // #3
        entity3=new SteeringEntity(mesh3);
-       entity3.maxSpeed=20
+       entity3.maxSpeed=15
        entity3.lookAtDirection=true;
        entity3.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        scene.add(entity3);
@@ -196,7 +196,7 @@
         //entity 2
         entity2.seek(entity1.position);
         if(params.avoidCollisions)
-            entity2.avoid([entity1, entity3])
+            entity2.avoid([entity1, entity3]);
         if(entity2.lookAtDirection)
             entity2.lookWhereGoing(true);
         else
@@ -206,9 +206,9 @@
 
 
         //entity 3
-        entity3.interpose(entity1, entity2)
+        entity3.interpose(entity1, entity2);
         if(params.avoidCollisions)
-            entity3.avoid([entity1, entity2])
+            entity3.avoid([entity1, entity2]);
         if(entity3.lookAtDirection)
             entity3.lookWhereGoing(true);
         else
@@ -224,7 +224,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">INTERPOSE:</span> White seeks ball. Red seeks White. Black interposes between White and Red. Move mouse on the floor to change ball position. ALT + Click to reposition entities</div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">INTERPOSE:</span><br>White seeks ball.<br>Red seeks White.<br>Black interposes between White and Red.<br>Move mouse on the floor to change ball position.<br>ALT + Click to reposition entities</div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Interpose.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

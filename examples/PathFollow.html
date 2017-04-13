@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: PATH FOLLOWING</title>
 
     <script src="../libs/dat.gui.min.js"></script>
     <script src="../libs/stats.min.js"></script>
@@ -64,6 +64,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -85,13 +86,14 @@
 
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh = new THREE.Mesh(geometry, material);
-       mesh.position.setY(200)
+       mesh.position.setY(100)
 
        // Entity
        entity=new SteeringEntity(mesh);
+       entity.maxSpeed=15;
        entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        entity.lookAtDirection=true;
        entity.loop=true;
@@ -139,10 +141,10 @@
     function addFlag(position)
     {
         addArrow(position)
-        var flagGeometry=new THREE.CylinderGeometry(50, 50, 500, 32);
+        var flagGeometry=new THREE.CylinderGeometry(20, 20, 300, 32);
         var flagMaterial=new THREE.MeshBasicMaterial({color: 0xBCFF00});
         var flag=new THREE.Mesh( flagGeometry, flagMaterial );
-        flag.position.set(position.x,250,position.z);
+        flag.position.set(position.x,150,position.z);
         scene.add(flag);
         flags.push(flag)
 
