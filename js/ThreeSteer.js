@@ -408,7 +408,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         return (ahead.distanceTo(this.position) <=leaderSightRadius || leader.position.distanceTo(this.position)<=leaderSightRadius)
     },
 
-    followLeader:function(leader, entities, distance=400, separationRadius=300, maxSeparation=100, leaderSightRadius=1600)
+    followLeader:function(leader, entities, distance=400, separationRadius=300, maxSeparation=100, leaderSightRadius=1600, arrivalThreshold=200)
     {
         var tv=leader.velocity.clone();
         tv.normalize().multiplyScalar(distance)
@@ -420,7 +420,7 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         {
             this.evade(leader);
         }
-        this.arrivalThreshold=200;
+        this.arrivalThreshold=arrivalThreshold;
         this.arrive(behind);
         this.separation(entities,separationRadius, maxSeparation);
 

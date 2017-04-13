@@ -90,7 +90,7 @@
 
        var material3 = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } );
 
-       params={maxSpeed:15, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numFollowers:20, distance:400, separationRadius:300, maxSeparation:100, leaderSightRadius:1600}
+       params={maxSpeed:15, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numFollowers:20, distance:400, separationRadius:300, maxSeparation:500, leaderSightRadius:1000, arrivalThreshold:200}
 
        followers=[]
 
@@ -147,9 +147,10 @@
        f2.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
        f2.add(params, 'lookAtDirection').name('Look at Direction');
        f2.add(params, 'distance', 100, 2000).name('Leader Distance').step(1);
-       f2.add(params, 'separationRadius', 100, 3000).name('Separation Radius').step(1);
-       f2.add(params, 'maxSeparation', 1, 600).name('Max Separation').step(1);
-       f2.add(params, 'leaderSightRadius', 500, 3000).name('Sight Radius').step(1);
+       f2.add(params, 'separationRadius', 100, 500).name('Separation Radius').step(1);
+       f2.add(params, 'maxSeparation', 100, 1000).name('Max Separation').step(1);
+       f2.add(params, 'leaderSightRadius', 100, 5000).name('Sight Radius').step(1);
+       f2.add(params, 'arrivalThreshold', 100, 1000).name('Arrival Threshold').step(1);
        f2.open()
 
 
@@ -181,7 +182,7 @@
         {
             followers[i].maxSpeed=params.maxSpeed;
             followers[i].maxForce=params.maxForce;
-            followers[i].followLeader(entity1, followers, params.distance, params.separationRadius, params.maxSeparation, params.leaderSightRadius)
+            followers[i].followLeader(entity1, followers, params.distance, params.separationRadius, params.maxSeparation, params.leaderSightRadius, params.arrivalThreshold)
             if(params.lookAtDirection)
                 followers[i].lookWhereGoing(true);
             else
