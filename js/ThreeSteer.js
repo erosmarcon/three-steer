@@ -266,6 +266,9 @@ SteeringEntity = function (mesh) {
     this.pathIndex=0
     this.pathThreshold=20;
 
+    this.distanceFromBoundary=100
+    this.boundingRadius=100;
+
     this.steeringForce = new THREE.Vector3(0, 0, 0);
 }
 
@@ -342,6 +345,38 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
             var pointB=targetB.position.clone().add(targetB.velocity.clone().multiplyScalar(timeToMidPoint))
             midPoint = pointA.add( pointB ).divideScalar(2);
             this.seek(midPoint)
+    },
+
+    getHidingPosition:function(spot, target)
+    {
+        var distanceAway=target.boundingRadius+this.distanceFromBoundary;
+        var direction=spot.position.clone().sub(target.position)
+            direction.normalize();
+        return spot.position.clone().add(direction)//.multiplyScalar(200)
+    },
+
+    hide:function(spots, entity)
+    {
+        var distanceToClosest=Number.POSITIVE_INFINITY;
+        var bestHidingSpot=new THREE.Vector3(0,0,0);
+        for(var i=0;i< spots.length;i++)
+        {
+            var hidingSpot=this.getHidingPosition(spots[i], entity)
+            var distance=hidingSpot.distanceTo(this.position)
+            if(distance<distanceToClosest)
+            {
+                distanceToClosest=distance;
+                bestHidingSpot=hidingSpot;
+            }
+
+        }
+        if(distanceToClosest==Number.POSITIVE_INFINITY)
+        {
+            this.evade(target)
+        }
+
+        this.arrive(bestHidingSpot)
+
     },
 
     inSight:function(entity)

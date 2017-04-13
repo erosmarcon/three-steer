@@ -139,7 +139,7 @@
         camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        //controls.maxPolarAngle = Math.PI * 0.5;
+        controls.maxPolarAngle = Math.PI * 0.5;
         controls.minDistance = 100;
         controls.maxDistance = 30000;
 
