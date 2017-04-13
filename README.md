@@ -27,7 +27,7 @@ Create a basic 3D scene:
             renderer = new THREE.WebGLRenderer();
             renderer.setSize(window.innerWidth, window.innerHeight);
             container.appendChild(renderer.domElement);
-            camera.position.set(0, 0, 1500);
+            camera.position.set(0, 3000, 3000;
             camera.lookAt(new THREE.Vector3(0,0,0))
             animate();
         }
@@ -43,5 +43,40 @@ Create a basic 3D scene:
     </body>
 
 ## How to use
+
+Simply instantiate SteeringEntities passing a renderable Object3D and add to the scene.
+(SteeringEntity is only an empty container with the motion logic)
+
+    var geometry = new THREE.BoxGeometry( 100, 200, 50 );
+    var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
+    var mesh = new THREE.Mesh(geometry, material);
+
+    entity = new SteeringEntity(mesh);
+    scene.add(entity);
+
+
+Call the behavior/s and the update method inside main render/animation loop. Eg:
+
+    function animate(){
+        requestAnimationFrame(animate);
+        entity.seek(point);
+        entity.lookWhereGoing(true);
+        entity.update();
+        renderer.render(scene, camera);
+    }
+
+Supported Behaviors are:
+
+* Seek
+* Flee
+* Arrive
+* Pursue
+* Evade
+* Interpose
+* Wander
+* Collision Avoidance
+* Follow Path
+* Cohesion, separation and alignment (Flocking)
+
 
 Currently the library only moves objects in the x/z direction.
