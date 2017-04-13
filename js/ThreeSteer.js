@@ -63,7 +63,7 @@ Entity = function (mesh) {
 
     this.mesh=mesh;
     this.mass = 1;
-    this.maxSpeed = 25;
+    this.maxSpeed = 10;
 
     this.position = new THREE.Vector3(0, 0, 0);
     this.velocity = new THREE.Vector3(0, 0, 0);
@@ -258,6 +258,14 @@ SteeringEntity = function (mesh) {
 
     this.avoidDistance = 400
     this.avoidBuffer=20; //NOT USED
+
+    this.inSightDistance=200
+    this.tooCloseDistance=60
+
+
+    this.pathIndex=0
+    this.pathThreshold=20;
+
     this.steeringForce = new THREE.Vector3(0, 0, 0);
 }
 
@@ -335,6 +343,75 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
             midPoint = pointA.add( pointB ).divideScalar(2);
             this.seek(midPoint)
     },
+
+    inSight:function(entity)
+    {
+        if(this.position.distanceTo(entity.position)>this.inSightDistance)
+            return false;
+        var heading=this.velocity.clone().normalize();
+        var difference=entity.position.clone().sub(this.position)
+        var dot=difference.dot(heading)
+        if(dot<0)
+            return false;
+        return true;
+
+    },
+
+
+    flock:function(entities)
+    {
+        var averageVelocity=this.velocity.clone()
+        var averagePosition=new THREE.Vector3(0,0,0)
+        var inSightCount=0
+        for(var i=0;i<entities.length;i++)
+        {
+            if(entities[i]!=this && this.inSight(entities[i]))
+            {
+                averageVelocity.add(entities[i].velocity)
+                averagePosition.add(entities[i].position)
+                if(this.position.distanceTo(entities[i].position) <this.tooCloseDistance)
+                {
+                    this.flee(entities[i].position)
+                }
+                inSightCount++;
+            }
+        }
+
+        if(inSightCount>0)
+        {
+            averageVelocity.divideScalar(inSightCount)
+            averagePosition.divideScalar(inSightCount)
+            this.seek(averagePosition)
+            this.steeringForce.add(averageVelocity.sub(this.velocity))
+        }
+    },
+
+    followPath:function(path, loop)
+    {
+        var wayPoint=path[this.pathIndex]
+        if(wayPoint==null)
+            return;
+        if(this.position.distanceTo(wayPoint)<this.pathThreshold)
+        {
+            if(this.pathIndex>=path.length-1)
+            {
+                if(loop)
+                    this.pathIndex=0;
+            }
+
+            else
+            {
+                this.pathIndex++
+            }
+
+        }
+        if(this.pathIndex>=path.length-1 && !loop)
+            this.arrive(wayPoint)
+        else
+            this.seek(wayPoint)
+
+    },
+
 
 
     avoid:function(obstacles)

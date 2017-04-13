@@ -8,7 +8,7 @@
     <script src="../libs/stats.min.js"></script>
     <script src="../libs/three.min.js"></script>
     <script src="../js/threejs/controls/OrbitControls.js"></script>
-    <script src="../js/Steer.js"></script>
+    <script src="../js/ThreeSteer.js"></script>
     <link rel="stylesheet" type="text/css" href="css/main.css"/>
     <link rel="stylesheet" type="text/css" href="css/gui.css"/>
 </head>
@@ -55,6 +55,7 @@
        camera.lookAt(new THREE.Vector3(0,0,0));
 
        controls = new THREE.OrbitControls(camera, renderer.domElement);
+       controls.maxPolarAngle = Math.PI * 0.5;
        controls.minDistance = 100;
        controls.maxDistance = 30000;
 
@@ -81,10 +82,10 @@
        scene.add(ball);
 
        // Entity Mesh
-       var geometry = new THREE.BoxGeometry( 200, 400, 100 );
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
        var material = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
        var mesh = new THREE.Mesh(geometry, material);
-       mesh.position.setY(200)
+       mesh.position.setY(100)
 
        // Entity
        entity=new SteeringEntity(mesh);
@@ -150,7 +151,7 @@
 
 <body onload="init('container')">
     <div id="container"></div>
-    <div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> Move mouse on the floor to change ball position.</div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span><br>Move mouse on the floor to change ball position.</div>
     <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Seek.html" target="_blank"><div class="view-source">View source</div></a>
 </body>
 

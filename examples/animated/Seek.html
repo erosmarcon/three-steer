@@ -11,7 +11,7 @@
     <script src="../../js/threejs/sea3d/SEA3DLZMA.js"></script>
     <script src="../../js/threejs/sea3d/SEA3DLoader.js"></script>
     <script src="../../js/threejs/controls/OrbitControls.js"></script>
-    <script src="../../js/Steer.js"></script>
+    <script src="../../js/ThreeSteer.js"></script>
     <link rel="stylesheet" type="text/css" href="../css/main.css"/>
     <link rel="stylesheet" type="text/css" href="../css/gui.css"/>
 </head>
@@ -249,6 +249,8 @@
         }
 
         entity.update();
+
+
         entity.setAnimation()
 
         renderer.render(scene, camera);
@@ -275,7 +277,7 @@
 
 <body onload="loadModels()">
 <div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> Move mouse pointer on the floor to change ball position.</div>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span><br>Move mouse pointer on the floor to change ball position.</div>
 
 <div id="loading-msg"></div>
 <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Seek.html" target="_blank">

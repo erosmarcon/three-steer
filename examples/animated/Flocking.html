@@ -23,14 +23,15 @@
     var clock;
     var controls;
     var stats;
-    var entity1, entity2;
+    var entity;
     var ball;
     var boundaries;
+    var entities;
     var params;
+    var mesh
 
     var characters=[
-        {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"}
+        {index:0, name:"white", url:"models/avatar_white.tjs.sea"}
     ];
 
     var animations=[
@@ -46,9 +47,7 @@
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
-            if (intersects.length > 0) {
-                entity1.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z)
-            }
+
         }
     }
 
@@ -71,7 +70,6 @@
         loader.onComplete = function (e) {
 
             characters[index].mesh=loader.meshes[0]
-            characters[index].mesh.rotateY(Math.PI)
 
             if (index < characters.length - 1) {
                 index++;
@@ -152,6 +150,7 @@
 
         clock = new THREE.Clock();
 
+
         //Lights
         var spotLight = new THREE.SpotLight( 0xffffff, 5.0 );
         spotLight.position.set( 0, 5000, 0 );
@@ -163,9 +162,9 @@
         spotLight.decay = 2;
         spotLight.distance = 10000;
 
+
         var ambient = new THREE.AmbientLight( 0xFFFFFF );
         ambient.intensity=0.25
-
         scene.add( spotLight );
         scene.add( ambient );
 
@@ -177,65 +176,99 @@
         floor.rotation.x = -Math.PI * .5;
         scene.add(floor);
 
+        params={inSightDistance:3000, tooCloseDistance:500, maxSpeed:8, maxForce:5, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:50}
 
-
-        var mesh1=characters[0].mesh;
-        mesh1.castShadow=true;
-
-        var mesh2=characters[1].mesh;
-        mesh2.castShadow=true;
-
-        //attach animations
-        for(var i=0;i<animations.length;i++)
-        {
-            mesh1.animations.push(animations[i].data);
-            mesh1.clips.push(animations[i].data);
-            mesh1.animationsData[i] = animations[i].data;
-
-            mesh2.animations.push(animations[i].data);
-            mesh2.clips.push(animations[i].data);
-            mesh2.animationsData[i] = animations[i].data;
-        }
 
         // Entities
-        mesh1.scale.set(2,2,2)
-        mesh2.scale.set(2,2,2)
+        entities=[]
+        for(var i=0;i<params.numEntities;i++)
+        {
+            var clone = new THREE.SEA3D.SkinnedMesh(characters[0].mesh.geometry, characters[0].mesh.material)
+            for(var j=0;j<animations.length;j++)
+            {
+                clone.animations.push(animations[j].data);
+                clone.clips.push(animations[j].data);
+                clone.animationsData[j] = animations[j].data;
+            }
 
-        entity1 = new SteeringEntity(mesh1);
-        entity1.castShadow=true;
-        entity1.maxSpeed=21;
-        entity1.radius=50
+            clone.rotateY(Math.PI)
+            clone.scale.set(1,1,1)
+            clone.castShadow=true;
+            var entity=new SteeringEntity(clone)
+            entity.position.set(Math.random() * (1000 - (-1000)) + (-1000) ,0,Math.random() * (1000 - (-1000)) + (-1000));
+            entity.maxSpeed=8;
+            entity.velocity.set(Math.random()*entity.maxSpeed, 0, Math.random()*entity.maxSpeed )
 
-        entity1.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-5000));
-        scene.add(entity1);
+            entities.push(entity);
+            scene.add(entity);
 
-
-        entity2 = new SteeringEntity(mesh2);
-        entity2.castShadow=true;
-        entity2.maxSpeed=18;
-        entity2.radius=50
-
-        entity2.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-5000));
-        scene.add(entity2);
+        }
 
         //Plane boundaries (do not cross)
         boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
-
         //Gui
+
+
+
+
+
         var gui = new dat.GUI();
 
-        var f1 = gui.addFolder('White Entity');
-        f1.add(entity1, 'maxSpeed', 5, 30).name('Max Speed').step(1);;
-        f1.add(entity1, 'maxForce', 1, 20).name('Max Force').step(1);;
+        var quantity = gui.add(params, 'numEntities', 2, 100).name("Num Of Entities");
+        quantity.onFinishChange(function(value) {
+            for(var i=0;i<entities.length;i++)
+            {
+                if(entities[i].geometry)
+                    entities[i].geometry.dispose();
+                if(entities[i].material)
+                    entities[i].material.dispose();
+                entities[i].mesh.traverse(function(obj) {
+                    scene.remove(obj);
+                    if(obj.geometry)
+                        obj.geometry.dispose();
+                    if(obj.material)
+                        obj.material.dispose();
+                    if(obj.mesh)
+                        obj.mesh.dispose();
+                    if(obj.texture)
+                        obj.texture.dispose();
 
-        f1.open()
+                });
 
-        var f2 = gui.addFolder('Red Entity')
-        f2.add(entity2, 'maxSpeed', 5, 30).name('Max Speed').step(1);;
-        f2.add(entity2, 'maxForce', 1, 20).name('Max Force').step(1);;
+                scene.remove(entities[i])
 
-        f2.open()
+            }
+            entities=[]
+
+            for(var i=0;i<value;i++)
+            {
+                var clone = new THREE.SEA3D.SkinnedMesh(characters[0].mesh.geometry, characters[0].mesh.material)
+                for(var j=0;j<animations.length;j++)
+                {
+                    clone.animations.push(animations[j].data);
+                    clone.clips.push(animations[j].data);
+                    clone.animationsData[j] = animations[j].data;
+                }
+
+                clone.rotateY(Math.PI)
+                clone.scale.set(1,1,1)
+                clone.castShadow=true;
+
+                var entity=new SteeringEntity(clone)
+                entity.position.set(Math.random() * (1000 - (-1000)) + (-1000) ,0,Math.random() * (1000 - (-1000)) + (-1000));
+                entity.maxSpeed=8;
+                entity.velocity.set(Math.random()*entity.maxSpeed, 0, Math.random()*entity.maxSpeed )
+                entities.push(entity);
+                scene.add(entity);
+
+            }
+        });
+
+        gui.add(params, 'maxSpeed', 5, 30).name('Max Speed').step(1);
+        gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
+        gui.add(params, 'inSightDistance', 500, 5000).name('InSight Distance').step(1);
+        gui.add(params, 'tooCloseDistance', 100, 1000).name('Too Close Distance').step(1);
 
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousedown', onClick, true);
@@ -256,26 +289,24 @@
         THREE.SEA3D.AnimationHandler.update(delta);
         controls.update();
 
-        //entity 1
-        entity1.evade(entity2);
-        entity1.avoid([entity2])
-        entity1.lookWhereGoing(true)
-        entity1.update();
-
-
-        //entity 2
-        entity2.pursue(entity1)
-        entity2.avoid([entity1])
-        entity2.lookWhereGoing(true)
-        entity2.update();
 
 
 
-        entity1.bounce(boundaries)
-        entity2.bounce(boundaries)
+        for(var i=0;i<entities.length;i++)
+        {
 
-        entity1.setAnimation()
-        entity2.setAnimation()
+            entities[i].setAnimation()
+            entities[i].maxSpeed=params.maxSpeed;
+            entities[i].maxForce=params.maxForce;
+            entities[i].inSightDistance=params.inSightDistance;
+            entities[i].tooCloseDistance=params.tooCloseDistance;
+            entities[i].flock(entities)
+            entities[i].lookWhereGoing(true);
+            entities[i].update()
+
+            entities[i].bounce(boundaries)
+
+        }
 
         renderer.render(scene, camera);
         stats.update();
@@ -297,17 +328,19 @@
         else if(this.velocity.length()>20)
             this.mesh.play(4, 0.2)//Run
 
-
+        var s = this.velocity.length() / this.maxSpeed;
+        this.mesh.currentAnimationAction.timeScale=s;
     }
 </script>
 
 <body onload="loadModels()">
 <div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">EVADE:</span> Red pursues White. White evade from RED. ALT + Click on the floor to change White position</div>
-<a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Evade.html" target="_blank"><div class="view-source">View source</div></a>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">FLOCKING:</span> Entities Flocking. Try to play with parameters </div>
 
 <div id="loading-msg"></div>
-
+<a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Flocking.html" target="_blank">
+    <div class="view-source">View source</div>
+</a>
 </body>
 
 </html>
