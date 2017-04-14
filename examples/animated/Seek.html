@@ -23,14 +23,17 @@
     var clock;
     var controls;
     var stats;
-    var entity;
+
     var ball;
     var boundaries;
+    var entities;
     var params;
+    var mesh;
 
     var characters=[
         {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-
+        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
+        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
     ];
 
     var animations=[
@@ -186,34 +189,91 @@
         ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 30, Math.random() * (5000 - (-5000)) + (-5000));
         scene.add(ball);
 
+        params={maxSpeed:6, maxForce:3,  numEntities:50}
 
 
-        var mesh=characters[0].mesh;
-        mesh.castShadow=true;
-        //attach animations
-        for(var i=0;i<animations.length;i++)
+
+        // Entities
+        entities=[]
+        for(var i=0;i<params.numEntities;i++)
         {
-            mesh.animations.push(animations[i].data);
-            mesh.clips.push(animations[i].data);
-            mesh.animationsData[i] = animations[i].data;
+            var randomChar=Math.floor(Math.random() * ((2-0)+1) + 0);
+            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[randomChar].mesh.material)
+            for(var j=0;j<animations.length;j++)
+            {
+                clone.animations.push(animations[j].data);
+                clone.clips.push(animations[j].data);
+                clone.animationsData[j] = animations[j].data;
+            }
+
+            clone.rotateY(Math.PI)
+            clone.scale.set(1,1,1)
+            clone.castShadow=true;
+            var entity=new SteeringEntity(clone);
+            entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+            entities.push(entity);
+            scene.add(entity);
+
         }
 
-        // Entity
-        mesh.scale.set(2,2,2)
-        entity = new SteeringEntity(mesh);
-        entity.castShadow=true;
-        entity.maxSpeed=8;
-
-        entity.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-5000));
-        scene.add(entity);
+        //Plane boundaries (do not cross)
+        boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
         //Plane boundaries (do not cross)
         boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
         //Gui
         var gui = new dat.GUI();
-        gui.add(entity, 'maxSpeed', 5, 30).name('Max Speed').step(1);
-        gui.add(entity, 'maxForce', 1, 20).name('Max Force').step(1);
+
+        var quantity = gui.add(params, 'numEntities', 1, 100).name("Num Of Entities");
+        quantity.onFinishChange(function(value) {
+            for(var i=0;i<entities.length;i++)
+            {
+                entities[i].mesh.traverse(function(obj) {
+                    scene.remove(obj);
+                    if(obj.geometry)
+                        obj.geometry.dispose();
+                    if(obj.material)
+                        obj.material.dispose();
+                    if(obj.mesh)
+                        obj.mesh.dispose();
+                    if(obj.texture)
+                        obj.texture.dispose();
+
+                });
+                scene.remove(entities[i])
+
+            }
+
+            entities=[]
+
+            for(var i=0;i<value;i++)
+            {
+
+                var randomChar=Math.floor(Math.random() * ((2-0)+1) + 0);
+                var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[randomChar].mesh.material)
+                for(var j=0;j<animations.length;j++)
+                {
+                    clone.animations.push(animations[j].data);
+                    clone.clips.push(animations[j].data);
+                    clone.animationsData[j] = animations[j].data;
+                }
+
+                clone.rotateY(Math.PI)
+                clone.scale.set(1,1,1)
+                clone.castShadow=true;
+
+                var entity=new SteeringEntity(clone)
+                entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+                entities.push(entity);
+                scene.add(entity);
+
+            }
+        });
+
+
+        gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
+        gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
 
         window.addEventListener('resize', onWindowResize, false);
         document.addEventListener('mousemove', onMouseMove, true);
@@ -236,42 +296,48 @@
         THREE.SEA3D.AnimationHandler.update(delta);
         controls.update();
 
-        if(entity.position.distanceTo(ball.position)>100)
+
+        for(var i=0;i<entities.length;i++)
         {
-            entity.seek(ball.position);
-            entity.lookWhereGoing(true);
+            entities[i].maxSpeed=params.maxSpeed;
+            entities[i].maxForce=params.maxForce;
+
+            entities[i].setAnimation()
+            if(entities[i].position.distanceTo(ball.position)>100)
+            {
+                entities[i].seek(ball.position);
+                entities[i].separation(entities, 50, 20)
+                entities[i].lookWhereGoing(true);
+            }
+
+            else
+            {
+                entities[i].idle()
+                entities[i].lookAt(new THREE.Vector3(ball.position.x, entities[i].position.y, ball.position.z));
+            }
+
+            entities[i].update();
+
+
         }
-
-        else
-        {
-            entity.idle()
-            entity.lookAt(new THREE.Vector3(ball.position.x, entity.position.y, ball.position.z));
-        }
-
-        entity.update();
-
-
-        entity.setAnimation()
 
         renderer.render(scene, camera);
         stats.update();
 
     }
-
-
     Entity.prototype.setAnimation=function()
     {
         if(this.velocity.length()<=1)
-            this.mesh.play(1, 0.2) ;//Idle
+            this.mesh.play(1, 0.5) ;//Idle
 
-        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
-            this.mesh.play(2, 0.2) //Walk
+        else if(this.velocity.length()>1 && this.velocity.length()<=8)
+            this.mesh.play(2, 0.5) //Walk
 
-        else if(this.velocity.length()>10 && this.velocity.length()<=20)
-            this.mesh.play(3, 0.2) //Jog
+        else if(this.velocity.length()>8 && this.velocity.length()<=12)
+            this.mesh.play(3, 0.5) //Jog
 
-        else if(this.velocity.length()>20)
-            this.mesh.play(4, 0.2)//Run
+        else if(this.velocity.length()>12)
+            this.mesh.play(4, 0.5)//Run
     }
 </script>
 

@@ -1,61 +1,4 @@
 
-EntityHelper = function (entity) {
-
-    THREE.Group.apply(this);
-
-    this.entity=entity;
-
-    this.forward = new THREE.ArrowHelper(this.entity.forward, this.entity.position, 300, 0xFF0000)
-    this.backward = new THREE.ArrowHelper(this.entity.backward, this.entity.position, 300, 0x0000FF)
-    this.left = new THREE.ArrowHelper(this.entity.left, this.entity.position, 300, 0x0000FF)
-    this.right = new THREE.ArrowHelper(this.entity.right, this.entity.position, 300, 0x0000FF)
-    this.velocity = new THREE.ArrowHelper(this.entity.velocity.clone().normalize(), this.entity.position, 10, 0x00FF00)
-    this.force = new THREE.ArrowHelper(this.entity.steeringForce.clone().normalize(), this.entity.position, 10, 0xFF0000)
-    this.raycaster=new THREE.ArrowHelper(this.entity.forward, this.entity.position, 400, 0x000000)
-
-
-    var geometry=new THREE.SphereGeometry(6)
-    var material =new THREE.MeshBasicMaterial({ color: 0xFFFFFF})
-    this.center=new THREE.Mesh(geometry, material)
-    this.add(this.center)
-
-    //this.add(this.forward)
-    //this.add(this.backward)
-    //this.add(this.left)
-    //this.add(this.right)
-    this.add(this.force)
-    this.add(this.velocity)
-    //this.add(this.raycaster)
-
-}
-
-EntityHelper.prototype = Object.assign(Object.create(THREE.Group.prototype), {
-    constructor: EntityHelper,
-
-    update: function () {
-
-        this.position.set(this.entity.position.x, this.entity.position.y, this.entity.position.z);
-
-        if(this.entity.velocity && this.entity.velocity.length())
-        {
-            this.velocity.setDirection(this.entity.velocity.clone().normalize())
-            this.velocity.setLength(this.entity.velocity.length()*20)
-        }
-
-        if(this.entity.steeringForce && this.entity.steeringForce.length())
-        {
-            this.force.setDirection(this.entity.steeringForce.clone().normalize())
-            this.force.setLength(this.entity.steeringForce.length()*20)
-        }
-
-        if(this.entity.raycaster )
-        {
-            this.raycaster.setDirection(this.entity.raycaster.ray.direction)
-            this.raycaster.setLength(this.entity.avoidDistance)
-        }
-    }
-});
-
 
 Entity = function (mesh) {
 
@@ -262,12 +205,7 @@ SteeringEntity = function (mesh) {
     this.inSightDistance=200
     this.tooCloseDistance=60
 
-
     this.pathIndex=0
-
-
-    this.distanceFromBoundary=100
-    this.boundingRadius=100;
 
     this.steeringForce = new THREE.Vector3(0, 0, 0);
 }
@@ -347,38 +285,6 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
             this.seek(midPoint)
     },
 
-  /*  getHidingPosition:function(spot, target)
-    {
-        var distanceAway=target.boundingRadius+this.distanceFromBoundary;
-        var direction=spot.position.clone().sub(target.position)
-            direction.normalize();
-        return spot.position.clone().add(direction)//.multiplyScalar(200)
-    },
-
-    hide:function(spots, entity)
-    {
-        var distanceToClosest=Number.POSITIVE_INFINITY;
-        var bestHidingSpot=new THREE.Vector3(0,0,0);
-        for(var i=0;i< spots.length;i++)
-        {
-            var hidingSpot=this.getHidingPosition(spots[i], entity)
-            var distance=hidingSpot.distanceTo(this.position)
-            if(distance<distanceToClosest)
-            {
-                distanceToClosest=distance;
-                bestHidingSpot=hidingSpot;
-            }
-
-        }
-        if(distanceToClosest==Number.POSITIVE_INFINITY)
-        {
-            this.evade(target)
-        }
-
-        this.arrive(bestHidingSpot)
-
-    },*/
-
 
     separation:function(entities, separationRadius=300, maxSeparation=100)
     {
@@ -446,9 +352,9 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         return res;
     },
 
-    queue:function(entities)
+    queue:function(entities, maxQueueRadius=500)
     {
-        var maxQueueRadius=500;
+
         var neighbor=this.getNeighborAhead(entities);
         var brake=new THREE.Vector3(0,0,0)
         var v=this.velocity.clone()

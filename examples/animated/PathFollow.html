@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Steering Behaviours: SEEK</title>
+    <title>Steering Behaviours: PATH FOLLOW</title>
 
     <script src="../../libs/dat.gui.min.js"></script>
     <script src="../../libs/stats.min.js"></script>
@@ -23,15 +23,19 @@
     var clock;
     var controls;
     var stats;
-    var entity;
-    var ball;
+
     var boundaries;
+    var entities;
     var params;
-    var path
+    var mesh;
+
+    var path;
+    var arrows, flags;
 
     var characters=[
         {index:0, name:"white", url:"models/avatar_white.tjs.sea"},
-
+        {index:1, name:"red",   url:"models/avatar_red.tjs.sea"},
+        {index:2, name:"black", url:"models/avatar_black.tjs.sea"}
     ];
 
     var animations=[
@@ -41,15 +45,22 @@
         {index:3, name:"run",  url:"models/animations/run.tjs.sea"}
     ];
 
-    function onMouseMove(event) {
-
+    function onClick(event) {
+        if (event.altKey) {
             var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
             var raycaster = new THREE.Raycaster();
             raycaster.setFromCamera(mouse3D, camera);
             var intersects = raycaster.intersectObjects(scene.children);
             if (intersects.length > 0) {
-                ball.position.set(intersects[0].point.x, 30, intersects[0].point.z)
+                var point=new THREE.Vector3(intersects[0].point.x, entities[0].position.y, intersects[0].point.z)
+                addFlag(point)
+                path.push(point)
 
+            }
+        }
+        else if(event.ctrlKey)
+        {
+            reset();
         }
     }
 
@@ -140,7 +151,7 @@
         camera.lookAt(new THREE.Vector3(0, 0, 0));
 
         controls = new THREE.OrbitControls(camera, renderer.domElement);
-        //controls.maxPolarAngle = Math.PI * 0.5;
+        controls.maxPolarAngle = Math.PI * 0.5;
         controls.minDistance = 100;
         controls.maxDistance = 30000;
 
@@ -179,50 +190,148 @@
         floor.rotation.x = -Math.PI * .5;
         scene.add(floor);
 
-        //Ball
-        var ballGeometry = new THREE.SphereGeometry(30, 32, 32);
-        var ballMaterial = new THREE.MeshLambertMaterial({color: 0x002DB2});
-        ball = new THREE.Mesh(ballGeometry, ballMaterial);
-        ball.castShadow=true;
-        ball.position.set(Math.random() * (5000 - (-5000)) + (-5000), 30, Math.random() * (5000 - (-5000)) + (-5000));
-        scene.add(ball);
+        path=[]
+        flags=[]
+        arrows=[]
+
+        params={maxSpeed:6, maxForce:3,  numEntities:5, thresholdRadius:10, loop:true}
 
 
 
-        var mesh=characters[0].mesh;
-        mesh.castShadow=true;
-        //attach animations
-        for(var i=0;i<animations.length;i++)
+        // Entities
+        entities=[]
+        for(var i=0;i<params.numEntities;i++)
         {
-            mesh.animations.push(animations[i].data);
-            mesh.clips.push(animations[i].data);
-            mesh.animationsData[i] = animations[i].data;
+            var randomChar=Math.floor(Math.random() * ((2-0)+1) + 0);
+            var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[randomChar].mesh.material)
+            for(var j=0;j<animations.length;j++)
+            {
+                clone.animations.push(animations[j].data);
+                clone.clips.push(animations[j].data);
+                clone.animationsData[j] = animations[j].data;
+            }
+
+            clone.rotateY(Math.PI)
+            clone.scale.set(1,1,1)
+            clone.castShadow=true;
+            var entity=new SteeringEntity(clone);
+            entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+            entities.push(entity);
+            scene.add(entity);
+
         }
-
-        // Entity
-        mesh.scale.set(2,2,2)
-        entity = new SteeringEntity(mesh);
-        entity.castShadow=true;
-        entity.maxSpeed=8;
-
-        entity.position.set(Math.random() * (5000 - (-5000)) + (-5000), 0, Math.random() * (5000 - (-5000)) + (-5000));
-        scene.add(entity);
 
         //Plane boundaries (do not cross)
         boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
-
-        path=[]
+        //Plane boundaries (do not cross)
+        boundaries = new THREE.Box3(new THREE.Vector3(-5000, 0, -5000), new THREE.Vector3(5000, 0, 5000));
 
         //Gui
         var gui = new dat.GUI();
-        gui.add(entity, 'maxSpeed', 5, 30).name('Max Speed').step(1);
-        gui.add(entity, 'maxForce', 1, 20).name('Max Force').step(1);
+
+        var quantity = gui.add(params, 'numEntities', 1, 100).name("Num Of Entities");
+        quantity.onFinishChange(function(value) {
+            for(var i=0;i<entities.length;i++)
+            {
+                entities[i].mesh.traverse(function(obj) {
+                    scene.remove(obj);
+                    if(obj.geometry)
+                        obj.geometry.dispose();
+                    if(obj.material)
+                        obj.material.dispose();
+                    if(obj.mesh)
+                        obj.mesh.dispose();
+                    if(obj.texture)
+                        obj.texture.dispose();
+
+                });
+                scene.remove(entities[i])
+
+            }
+
+            entities=[]
+
+            for(var i=0;i<value;i++)
+            {
+
+                var randomChar=Math.floor(Math.random() * ((2-0)+1) + 0);
+                var clone = new THREE.SEA3D.SkinnedMesh(characters[randomChar].mesh.geometry, characters[randomChar].mesh.material)
+                for(var j=0;j<animations.length;j++)
+                {
+                    clone.animations.push(animations[j].data);
+                    clone.clips.push(animations[j].data);
+                    clone.animationsData[j] = animations[j].data;
+                }
+
+                clone.rotateY(Math.PI)
+                clone.scale.set(1,1,1)
+                clone.castShadow=true;
+
+                var entity=new SteeringEntity(clone)
+                entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+                entities.push(entity);
+                scene.add(entity);
+
+            }
+        });
+
+
+        gui.add(params, 'maxSpeed', 2, 20).name('Max Speed').step(1);
+        gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
+        gui.add(params, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
+        gui.add(params, 'loop').name('Loop');
 
         window.addEventListener('resize', onWindowResize, false);
-        document.addEventListener('mousedown', onClick, true);
+        document.addEventListener( 'mousedown', onClick, true );
         animate();
     }
+
+    function reset()
+    {
+        var i;
+        for(i=0;i<flags.length;i++)
+            scene.remove(flags[i])
+        for(i=0;i<arrows.length;i++)
+            scene.remove(arrows[i])
+        path=[]
+        flags=[]
+        arrows=[];
+        for(var i=0;i<entities.length;i++)
+        {
+            entities[i].pathIndex=0
+        }
+
+    }
+
+    function addFlag(position)
+    {
+        addArrow(position)
+        var flagGeometry=new THREE.CylinderGeometry(10, 10, 300, 32);
+        var flagMaterial=new THREE.MeshPhongMaterial({color: 0x002DB2});
+        var flag=new THREE.Mesh( flagGeometry, flagMaterial );
+        flag.castShadow=true;
+        flag.position.set(position.x,150,position.z);
+        scene.add(flag);
+        flags.push(flag)
+
+    }
+
+    function addArrow(position)
+    {
+        if(path.length>0)
+        {
+            var start=new THREE.Vector3(path[path.length-1].x, path[path.length-1].y, path[path.length-1].z);
+            var distance=path[path.length-1].distanceTo(position)
+            var direction=position.clone().sub(path[path.length-1]).normalize()
+            var arrow=new THREE.ArrowHelper(direction, start, distance, 0x002DB2, distance-1, 100)
+            arrow.cone.material.transparent=true;
+            arrow.cone.material.opacity=0.5;
+            scene.add(arrow)
+            arrows.push(arrow)
+        }
+    }
+
 
 
     function onWindowResize() {
@@ -240,51 +349,55 @@
         THREE.SEA3D.AnimationHandler.update(delta);
         controls.update();
 
-        if(entity.position.distanceTo(ball.position)>100)
+
+        for(var i=0;i<entities.length;i++)
         {
-            entity.seek(ball.position);
-            entity.lookWhereGoing(true);
+            entities[i].maxSpeed=params.maxSpeed;
+            entities[i].maxForce=params.maxForce;
+
+            entities[i].setAnimation()
+
+            if(path.length>0)
+            {
+                entities[i].followPath(path, params.loop, params.thresholdRadius);
+                entities[i].lookWhereGoing(true)
+            }
+
+            else
+            {
+                entities[i].idle()
+            }
+
+            entities[i].update();
+
         }
-
-        else
-        {
-            entity.idle()
-            entity.lookAt(new THREE.Vector3(ball.position.x, entity.position.y, ball.position.z));
-        }
-
-        entity.update();
-
-
-        entity.setAnimation()
 
         renderer.render(scene, camera);
         stats.update();
 
     }
-
-
     Entity.prototype.setAnimation=function()
     {
         if(this.velocity.length()<=1)
-            this.mesh.play(1, 0.2) ;//Idle
+            this.mesh.play(1, 0.5) ;//Idle
 
-        else if(this.velocity.length()>=1 && this.velocity.length()<=10)
-            this.mesh.play(2, 0.2) //Walk
+        else if(this.velocity.length()>1 && this.velocity.length()<=8)
+            this.mesh.play(2, 0.5) //Walk
 
-        else if(this.velocity.length()>10 && this.velocity.length()<=20)
-            this.mesh.play(3, 0.2) //Jog
+        else if(this.velocity.length()>8 && this.velocity.length()<=12)
+            this.mesh.play(3, 0.5) //Jog
 
-        else if(this.velocity.length()>20)
-            this.mesh.play(4, 0.2)//Run
+        else if(this.velocity.length()>12)
+            this.mesh.play(4, 0.5)//Run
     }
 </script>
 
 <body onload="loadModels()">
 <div id="container"></div>
-<div id="msg"><span style="color:#BFFF00; font-weight: bold">SEEK:</span> Move mouse pointer on the floor to change ball position.</div>
+<div id="msg"><span style="color:#BFFF00; font-weight: bold">PATH FOLLOW:</span><br>ALT + Click to add points to path.<br>CTRL + Click to reset.</div>
 
 <div id="loading-msg"></div>
-<a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/Seek.html" target="_blank">
+<a href="https://github.com/erosmarcon/three-steer/blob/master/examples/animated/PathFollow.html" target="_blank">
     <div class="view-source">View source</div>
 </a>
 </body>

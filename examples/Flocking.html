@@ -61,7 +61,7 @@
        scene.add(floor);
 
 
-       params={inSightDistance:1000, tooCloseDistance:400, maxSpeed:15, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numEntities:20}
+       params={inSightDistance:1000, tooCloseDistance:400, maxSpeed:15, maxForce:5, lookAtDirection:true, numEntities:20}
 
        // Entity Mesh
        var geometry = new THREE.BoxGeometry( 100, 200, 50 );
@@ -115,7 +115,7 @@
        gui.add(params, 'maxSpeed', 1, 50).name('Max Speed').step(1);
        gui.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
        gui.add(params, 'lookAtDirection').name('Look At Direction');
-       gui.add(params, 'inSightDistance', 500, 5000).name('InSight Distance').step(1);
+       gui.add(params, 'inSightDistance', 1000, 10000).name('InSight Distance').step(1);
        gui.add(params, 'tooCloseDistance', 100, 1000).name('Too Close Distance').step(1);
 
        window.addEventListener('resize', onWindowResize, false);

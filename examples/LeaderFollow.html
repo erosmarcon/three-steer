@@ -18,7 +18,7 @@
     var scene, renderer;
     var controls;
     var stats;
-    var entity1, entity2;
+    var entity1;
     var boundaries;
     var params
 
@@ -86,6 +86,9 @@
        entity1.maxSpeed=15;
        entity1.lookAtDirection=true;
        entity1.position.set(Math.random() * (2500 - (-2500)) + (-2500) ,0,Math.random() * (2500 - (-2500)) + (-2500));
+       entity1.wanderDistance=10;
+       entity1.wanderRadius=5;
+       entity1.wanderRange=1;
        scene.add(entity1);
 
        var material3 = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } );
@@ -190,11 +193,9 @@
             followers[i].update()
             followers[i].bounce(boundaries)
         }
-        //entity1.avoid(spots)
+
 
         entity1.update();
-
-
         entity1.bounce(boundaries)
 
         renderer.render(scene, camera);

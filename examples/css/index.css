@@ -25,7 +25,6 @@ body
     height:100%;
 }
 
-
 #main-frame
 {
     position: absolute;
@@ -47,7 +46,6 @@ body
     overflow: auto;
     margin: 0;
     padding: 0;
-
 }
 
 #menu
@@ -94,6 +92,6 @@ body
     border-bottom: 1px solid #999999;
     padding:10px;
     font-size:11px;
-    color:#999999;
+    color:#00FFFF;
 }
 
