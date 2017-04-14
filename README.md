@@ -49,7 +49,7 @@ Create a basic 3D scene:
 
 ## How to use
 
-Simply instantiate and add to the scene SteeringEntities.
+Simply instantiate some Steering Entities and add them to the scene.
 SteeringEntity is only an empty container with the motion logic, you need to pass a visible Object3D to the constructor to see it in action:
 
 
