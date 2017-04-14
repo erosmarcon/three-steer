@@ -264,7 +264,7 @@ SteeringEntity = function (mesh) {
 
 
     this.pathIndex=0
-    this.pathThreshold=20;
+
 
     this.distanceFromBoundary=100
     this.boundingRadius=100;
@@ -426,6 +426,46 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
 
     },
 
+    getNeighborAhead:function(entities)
+    {
+        var maxQueueAhead=500;
+        var maxQueueRadius=500;
+        var res;
+        var qa=this.velocity.clone().normalize().multiplyScalar(maxQueueAhead);
+        var ahead = this.position.clone().add(qa);
+
+        for(var i=0;i<entities.length;i++)
+        {
+            var distance=ahead.distanceTo(entities[i].position);
+            if(entities[i]!=this && distance<=maxQueueRadius)
+            {
+                res=entities[i]
+                break;
+            }
+        }
+        return res;
+    },
+
+    queue:function(entities)
+    {
+        var maxQueueRadius=500;
+        var neighbor=this.getNeighborAhead(entities);
+        var brake=new THREE.Vector3(0,0,0)
+        var v=this.velocity.clone()
+        if(neighbor!=null)
+        {
+            brake=this.steeringForce.clone().negate().multiplyScalar(0.8);
+            v.negate().normalize();
+            brake.add(v)
+            if(this.position.distanceTo(neighbor.position)<=maxQueueRadius)
+            {
+                this.velocity.multiplyScalar(0.3)
+            }
+        }
+
+        this.steeringForce.add(brake);
+    },
+
     inSight:function(entity)
     {
         if(this.position.distanceTo(entity.position)>this.inSightDistance)
@@ -468,12 +508,12 @@ SteeringEntity.prototype = Object.assign(Object.create(Entity.prototype), {
         }
     },
 
-    followPath:function(path, loop)
+    followPath:function(path, loop, thresholdRadius=1)
     {
         var wayPoint=path[this.pathIndex]
         if(wayPoint==null)
             return;
-        if(this.position.distanceTo(wayPoint)<this.pathThreshold)
+        if(this.position.distanceTo(wayPoint)<thresholdRadius)
         {
             if(this.pathIndex>=path.length-1)
             {

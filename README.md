@@ -83,6 +83,7 @@ Supported Behaviors are:
 * Collision Avoidance
 * Follow Path
 * Follow Leader
+* Queue
 * Cohesion, separation and alignment (Flocking)
 
 

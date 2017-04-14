@@ -94,6 +94,7 @@
        // Entity
        entity=new SteeringEntity(mesh);
        entity.maxSpeed=15;
+       entity.thresholdRadius=10;
        entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
        entity.lookAtDirection=true;
        entity.loop=true;
@@ -114,6 +115,7 @@
        gui.add(entity, 'maxSpeed', 1, 50).name('Max Speed').step(1);
        gui.add(entity, 'maxForce', 1, 20).name('Max Force').step(1);
        gui.add(entity, 'lookAtDirection').name('Look At Direction');
+       gui.add(entity, 'thresholdRadius', 10, 500).name('Threshold Radius').step(1);
        gui.add(entity, 'loop').name('Loop');
 
        window.addEventListener('resize', onWindowResize, false);
@@ -178,7 +180,7 @@
         controls.update();
 
         if(path.length>0)
-            entity.followPath(path, entity.loop);
+            entity.followPath(path, entity.loop, entity.thresholdRadius);
         else
             entity.idle()
         if(entity.lookAtDirection)

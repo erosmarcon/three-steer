@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Steering Behaviours: QUEUE</title>
+    <link rel="stylesheet" type="text/css" href="css/main.css"/>
+    <script src="../libs/dat.gui.min.js"></script>
+    <script src="../libs/stats.min.js"></script>
+    <script src="../libs/three.min.js"></script>
+    <script src="../js/threejs/controls/OrbitControls.js"></script>
+    <script src="../js/ThreeSteer.js"></script>
+    <link rel="stylesheet" type="text/css" href="css/gui.css"/>
+</head>
+<script>
+    var container;
+    var camera;
+
+    var scene, renderer;
+    var controls;
+    var stats;
+    var entity1, entity2;
+    var boundaries;
+    var params
+
+    var followers;
+
+
+    function onClick(event) {
+        if (event.altKey) {
+            var mouse3D = new THREE.Vector3(( event.clientX / window.innerWidth ) * 2 - 1, -( event.clientY / window.innerHeight ) * 2 + 1, 0);
+            var raycaster = new THREE.Raycaster();
+            raycaster.setFromCamera(mouse3D, camera);
+            var intersects = raycaster.intersectObjects(scene.children);
+            if (intersects.length > 0) {
+                entity1.position.set(intersects[0].point.x, intersects[0].point.y, intersects[0].point.z);
+            }
+        }
+    }
+
+   function init(element)
+   {
+       container= document.getElementById(element);
+       camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 50000);
+       scene = new THREE.Scene();
+
+       renderer = new THREE.WebGLRenderer({ alpha: true });
+       renderer.setClearColor( 0x333333, 0);
+       renderer.setSize(window.innerWidth, window.innerHeight);
+       renderer.domElement.style.position = 'absolute';
+       renderer.domElement.style.top = 0;
+       container.appendChild(renderer.domElement);
+
+       camera.position.set(0, 10000, 10000);
+       camera.lookAt(new THREE.Vector3(0,0,0));
+
+       controls = new THREE.OrbitControls(camera, renderer.domElement);
+       controls.maxPolarAngle = Math.PI * 0.5;
+       controls.minDistance = 100;
+       controls.maxDistance = 30000;
+
+       stats = new Stats();
+       stats.domElement.style.position = 'absolute';
+       stats.domElement.style.bottom = '0px';
+       stats.domElement.style.left='180px';
+       stats.domElement.style.zIndex = 100;
+       container.appendChild( stats.domElement );
+
+       // Floor
+       var floorGeometry=new THREE.PlaneGeometry(10000,10000, 32 );
+       var floorMaterial=new THREE.MeshBasicMaterial({color: 0x666666, transparent: true, opacity: 0.5});
+       var floor=new THREE.Mesh( floorGeometry, floorMaterial);
+       floor.rotation.x=-Math.PI*.5;
+       scene.add(floor);
+
+
+       // Entity Mesh
+       var geometry = new THREE.BoxGeometry( 100, 200, 50 );
+       var material1 = new THREE.MeshBasicMaterial( { color: 0xFFFFFF, wireframe: true } );
+       var mesh1 = new THREE.Mesh(geometry, material1);
+       mesh1.position.setY(100);
+
+
+
+       // Entities
+       entity1=new SteeringEntity(mesh1);
+       entity1.maxSpeed=15;
+       entity1.lookAtDirection=true;
+       entity1.position.set(Math.random() * 5000 ,0,Math.random() * 5000);
+       scene.add(entity1);
+
+       var material3 = new THREE.MeshBasicMaterial( { color: 0x000000, wireframe: true } );
+
+       params={maxSpeed:15, maxForce:5, lookAtDirection:true, wanderDistance:10, wanderRadius:5, wanderRange:1, numFollowers:50, distance:400, separationRadius:300, maxSeparation:500, leaderSightRadius:1000, arrivalThreshold:200}
+
+       followers=[]
+
+       for(var i=0;i<params.numFollowers;i++)
+       {
+           var mesh=new THREE.Mesh(geometry, material3)
+           mesh.position.setY(100)
+           var entity=new SteeringEntity(mesh)
+           entity.position.set(Math.random() * (2500 - (-2500)) + (-2500) ,0,Math.random() * (2500 - (-2500)) + (-2500));
+           entity.maxSpeed=params.maxSpeed;
+           entity.maxForce=params.maxForce;
+           followers.push(entity)
+           scene.add(entity);
+       }
+
+
+       //Plane boundaries (do not cross)
+       boundaries=new THREE.Box3(new THREE.Vector3(-5000,0, -5000), new THREE.Vector3(5000, 0, 5000));
+
+
+       //Gui
+       var gui = new dat.GUI();
+
+       var f1 = gui.addFolder('Leader');
+       f1.add(entity1, 'maxSpeed', 1, 50).name('Max Speed').step(1);
+       f1.add(entity1, 'maxForce', 1, 20).name('Max Force').step(1);
+       f1.add(entity1, 'lookAtDirection').name('Look at Direction');
+       f1.open()
+
+
+       var f2 = gui.addFolder('Followers')
+       var quantity = f2.add(params, 'numFollowers', 2, 100).name("Num Of Followers").step(1);
+       quantity.onFinishChange(function(value) {
+           for(var i=0;i<followers.length;i++)
+           {
+               scene.remove(followers[i])
+               followers[i].mesh.geometry.dispose()
+               followers[i].mesh.material.dispose()
+           }
+
+           followers=[]
+
+           for(var i=0;i<value;i++)
+           {
+               var mesh=new THREE.Mesh(geometry, material3)
+               mesh.position.setY(100)
+               var entity=new SteeringEntity(mesh)
+               entity.position.set(Math.random() * (5000 - (-5000)) + (-5000) ,0,Math.random() * (5000 - (-5000)) + (-5000));
+               followers.push(entity)
+               scene.add(entity);
+           }
+       });
+       f2.add(params, 'maxSpeed', 1, 50).name('Max Speed').step(1);
+       f2.add(params, 'maxForce', 1, 20).name('Max Force').step(1);
+       f2.add(params, 'lookAtDirection').name('Look at Direction');
+       f2.add(params, 'distance', 100, 2000).name('Leader Distance').step(1);
+       f2.add(params, 'separationRadius', 100, 500).name('Separation Radius').step(1);
+       f2.add(params, 'maxSeparation', 100, 1000).name('Max Separation').step(1);
+       f2.add(params, 'leaderSightRadius', 100, 5000).name('Sight Radius').step(1);
+       f2.add(params, 'arrivalThreshold', 100, 1000).name('Arrival Threshold').step(1);
+       f2.open()
+
+
+
+       window.addEventListener('resize', onWindowResize, false);
+       document.addEventListener( 'mousedown', onClick, true );
+       animate();
+   }
+
+    function onWindowResize()
+    {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function animate()
+    {
+        requestAnimationFrame(animate);
+        controls.update();
+        //entity1.wander()
+
+        var enqueud=[]
+
+            if(entity1.lookAtDirection)
+                entity1.lookWhereGoing(true);
+            else
+                entity1.rotation.set(0,0,0);
+
+        var len=followers.length
+        for(var i=0;i<len;i++)
+        {
+
+            if(followers[i].position.distanceTo(entity1.position)<=100)
+            {
+
+                scene.remove(followers[i])
+                followers[i].mesh.geometry.dispose()
+                followers[i].mesh.material.dispose()
+            }
+            else
+            {
+                followers[i].maxSpeed=params.maxSpeed;
+                followers[i].maxForce=params.maxForce;
+                followers[i].seek(entity1.position)
+                followers[i].avoid(followers)
+                followers[i].queue(followers)
+
+
+                if(params.lookAtDirection)
+                    followers[i].lookWhereGoing(true);
+                else
+                    followers[i].rotation.set(0,0,0)
+                followers[i].update()
+                followers[i].bounce(boundaries)
+                enqueud.push(followers[i])
+            }
+        }
+        followers=enqueud
+
+        entity1.update();
+        entity1.bounce(boundaries)
+        renderer.render(scene, camera);
+        stats.update();
+    }
+</script>
+
+<body onload="init('container')">
+    <div id="container"></div>
+    <div id="msg"><span style="color:#BFFF00; font-weight: bold">QUEUE:</span><br>Blacks queued to be eaten by White.<br>ALT + Click to reposition White.<br>CTRL + Click to restart.<br>Try to play with parameters</div>
+    <a href="https://github.com/erosmarcon/three-steer/blob/master/examples/Queue.html" target="_blank"><div class="view-source">View source</div></a>
+</body>
+
+</html>
